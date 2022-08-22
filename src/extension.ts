@@ -105,22 +105,24 @@ async function generateRootFolder() {
     let f = vscode.workspace.workspaceFolders[0].uri.fsPath;
     let parsedUri = vscode.Uri.parse(`${f}/SAR`);
 
+    // If a folder has been already created, revert (try logic).
     try {
       await vscode.workspace.fs.stat(parsedUri);
-      vscode.window.showWarningMessage('A SAR folder has been already created.');
-      return
+      vscode.window.showWarningMessage(
+        "SAReporting: A SAR folder has been already created."
+      );
     } catch {
-      vscode.window.showInformationMessage('SAReporting: Generated Base Folder');
+      vscode.window.showInformationMessage(
+        "SAReporting: Generated Base Folder"
+      );
       vscode.workspace.fs.createDirectory(parsedUri);
     }
-
   } else {
-    let message: string = 
+    let message: string =
       "Unable to resolve root directory. Create the findings file manually.";
     vscode.window.showErrorMessage(message);
   }
 }
-
 
 // ======================= EXTENSION ========================
 export function activate(context: vscode.ExtensionContext) {
@@ -233,7 +235,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "vsSAR.createSampleFindingDatabase",
       async () => {
-        
         generateRootFolder();
       }
     )
