@@ -109,7 +109,7 @@ export function activate(context: vscode.ExtensionContext) {
       let nanFindings = new Map<string, Finding>();
 
       let dirFiles = await getSolFiles();
-      console.log(dirFiles)
+      console.log(dirFiles);
 
       if (dirFiles !== undefined) {
         for (let file of dirFiles) {
@@ -200,13 +200,54 @@ export function activate(context: vscode.ExtensionContext) {
               }
             }
           }
-
         }
         console.log(nanFindings);
         console.log(gasFindings);
         console.log(lowFindings);
       }
-    })
+    }),
+
+    vscode.commands.registerCommand(
+      "vsSAR.createSampleFindingDatabase",
+      async () => {
+        console.log(`SAReporting: Generating sample finding file...`);
+        vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "SAReporting: Generating sample finding file",
+            cancellable: true,
+          },
+          (progress, token) => {
+            token.onCancellationRequested(() => {
+              console.log("User canceled the report generation.");
+            });
+
+            progress.report({ increment: 0 });
+
+            setTimeout(() => {
+              progress.report({ increment: 10 });
+            }, 1000);
+
+            setTimeout(() => {
+              progress.report({ increment: 40 });
+            }, 2000);
+
+            setTimeout(() => {
+              progress.report({ increment: 50 });
+            }, 3000);
+
+            const p = new Promise<void>((resolve) => {
+              setTimeout(() => {
+                resolve();
+              }, 4000);
+            });
+
+            return p;
+          }
+        );
+      
+      }
+    )
   );
 }
 

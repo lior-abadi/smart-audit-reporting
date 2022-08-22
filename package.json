@@ -10,7 +10,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:vsSAR.generateGeneralReport"
+    "onCommand:vsSAR.generateGeneralReport",
+    "onCommand:vsSAR.createSampleFindingDatabase"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -18,6 +19,11 @@
       {
         "command": "vsSAR.generateGeneralReport",
         "title": "Generate General Report",
+        "category": "SAReporting"
+      },
+      {
+        "command": "vsSAR.createSampleFindingDatabase",
+        "title": "Create Sample Finding Database",
         "category": "SAReporting"
       }
     ]
