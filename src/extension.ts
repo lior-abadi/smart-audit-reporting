@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as sarDatabase from "./SAR.json"; // TODO: This should be pushed as a sample into the current workspace
-import * as flatten from "flat";
 
 // =============== TYPES DECLARATIONS ===============
 // A SAR database with findings
@@ -34,27 +33,37 @@ async function getSolFiles(): Promise<vscode.Uri[] | undefined> {
   );
 }
 
-function isInDatabase(db: dbType, label: string): boolean {
-  const flatten_database: JSON = flatten(db);
-  return Object.values(flatten_database)
-    .toString()
-    .toUpperCase()
-    .includes(label.toUpperCase());
-
-}
-
 // Retrieves the content of a finding located in the SAR.json database.
-function getFindingContent(db: dbType, type:string, label: string): [title: string, prompt: string]{
-  
-  let findingInDB = db.find(item => item.label.toUpperCase() === label.toUpperCase())
+function getFindingContent(
+  db: dbType,
+  type: string,
+  label: string
+): [mappingToPoint: number, title: string, prompt: string] {
+  let findingInDB = db.find(
+    (item) => item.label.toUpperCase() === label.toUpperCase()
+  );
 
-  if(findingInDB === undefined || findingInDB.type.toUpperCase()[0] !== type.toUpperCase()) {
-    console.log(`Entered the not found logic`)
-    console.log([label, db.filter(item => item.type.toUpperCase() === "NAN")[0].prompt])
-    return [label, db.filter(item => item.type.toUpperCase() === "NAN")[0].prompt]
+  // If it is not found within the database or there is a mismatch of severities.
+  if (
+    findingInDB === undefined ||
+    findingInDB.type.toUpperCase()[0] !== type.toUpperCase()
+  ) {
+    return [
+      404,
+      label,
+      db.filter((item) => item.type.toUpperCase() === "NAN")[0].prompt,
+    ];
   }
-  console.log([findingInDB.title, findingInDB.prompt])
-  return [findingInDB.title, findingInDB.prompt]
+  // Gas finding
+  if (type.toUpperCase() === "G")
+    return [0, findingInDB.title, findingInDB.prompt];
+
+  // QA/Low finding
+  if (type.toUpperCase() === "L")
+    return [1, findingInDB.title, findingInDB.prompt];
+
+  // Case if no severity is recognized.
+  return [404, findingInDB.title, findingInDB.prompt];
 }
 
 // Stores each scrapped finding into a relevant mapping
@@ -63,14 +72,12 @@ function storeFindings(
   findingMapping: FindingMapping,
   findingType: string,
   findingLabel: string,
+  findingTitle: string,
+  findingPrompt: string,
   currentAppearance: Appearance
 ) {
-  // Retrieve the data from DB
-  let [findingTitle, findingPrompt] : [string, string] = getFindingContent(db, findingType, findingLabel);
-
   // Case: first time this label appears
   if (!findingMapping.has(findingLabel)) {
-    console.log(`First Time appearing`);
     findingMapping.set(findingLabel, {
       type: findingType,
       title: findingTitle,
@@ -80,7 +87,6 @@ function storeFindings(
   } else {
     // This scenario covers the case where a not defined finding appears again
     // It is only needed to push it to the appearances array. Need to cache the prev. stored values
-    console.log(`Appeared before`);
     let cacheFinding: Finding = findingMapping.get(findingLabel)!;
     cacheFinding.appearances.push(currentAppearance);
 
@@ -148,39 +154,48 @@ export function activate(context: vscode.ExtensionContext) {
 
               // ============= FINDING PROCESSING =============
 
-              // ------ FINDINGS NOT FOUND ------
-              // Save a finding that it is not in the database in order to feed it back to the user.
-              if (!isInDatabase(sarDatabase, findingLabel)) {
-                // Due to the fact that is an unknown finding, we use the label as the content and title.
-                storeFindings(
-                  sarDatabase,
-                  nanFindings,
-                  "NaN",
-                  findingLabel,
-                  currentAppearance
-                );
-                continue; // This step avoids entering with a non existent finding into the known finding logic.
-              }
+              // Get the content and mapping id.
+              let [mappingId, title, prompt]: [number, string, string] = getFindingContent(sarDatabase, findingSeverity, findingLabel);
+              // mappingId = 404: NaN ; mappingId = 0: Gas ; mappingId = 1: Low/QA
+              switch(mappingId) {
+                case 404:
+                  storeFindings(
+                    sarDatabase,
+                    nanFindings,
+                    findingSeverity,
+                    findingLabel,
+                    title,
+                    prompt,
+                    currentAppearance
+                  );
+                  break;
 
-              // ------ KNOWN FINDINGS WITHIN THE DATABASE ------
-              // Will only reach the following lines if the finding is in the database.
-              if(findingSeverity.toUpperCase() === "G") {
-                storeFindings(
-                  sarDatabase,
-                  gasFindings,
-                  findingSeverity,
-                  findingLabel,
-                  currentAppearance
-                )
-              }
-              if(findingSeverity.toUpperCase() === "L") { // TODO: a L finding with a G in the @SAR slips out... prevent this.
-                storeFindings(
-                  sarDatabase,
-                  lowFindings,
-                  findingSeverity,
-                  findingLabel,
-                  currentAppearance
-                )
+                case 0:
+                  storeFindings(
+                    sarDatabase,
+                    gasFindings,
+                    findingSeverity,
+                    findingLabel,
+                    title,
+                    prompt,
+                    currentAppearance
+                  );
+                  break;
+                
+                case 1:
+                  storeFindings(
+                    sarDatabase,
+                    lowFindings,
+                    findingSeverity,
+                    findingLabel,
+                    title,
+                    prompt,
+                    currentAppearance
+                  );
+                  break;
+
+                default:
+                  break;
               }
 
             }
@@ -188,7 +203,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
         console.log(nanFindings);
         console.log(gasFindings);
-        console.log(lowFindings)
+        console.log(lowFindings);
       }
     })
   );

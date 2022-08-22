@@ -3,7 +3,7 @@
     "type": "NaN",
     "label": "not-found",
     "title": "Finding missing in the database",
-    "prompt": "The finding is missing in the database or has a typo."
+    "prompt": "The finding is missing in the database, has a typo or the wrong type of severity"
   },
 
   {
