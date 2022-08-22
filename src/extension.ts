@@ -99,6 +99,29 @@ function storeFindings(
   }
 }
 
+async function generateRootFolder() {
+  if (vscode.workspace.workspaceFolders !== undefined) {
+    // Generating the SAR folder within the root of the project
+    let f = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    let parsedUri = vscode.Uri.parse(`${f}/SAR`);
+
+    try {
+      await vscode.workspace.fs.stat(parsedUri);
+      vscode.window.showWarningMessage('A SAR folder has been already created.');
+      return
+    } catch {
+      vscode.window.showInformationMessage('SAReporting: Generated Base Folder');
+      vscode.workspace.fs.createDirectory(parsedUri);
+    }
+
+  } else {
+    let message: string = 
+      "Unable to resolve root directory. Create the findings file manually.";
+    vscode.window.showErrorMessage(message);
+  }
+}
+
+
 // ======================= EXTENSION ========================
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -210,42 +233,8 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "vsSAR.createSampleFindingDatabase",
       async () => {
-        console.log(`SAReporting: Generating sample finding file...`);
-        vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title: "SAReporting: Generating sample finding file",
-            cancellable: true,
-          },
-          (progress, token) => {
-            token.onCancellationRequested(() => {
-              console.log("User canceled the report generation.");
-            });
-
-            progress.report({ increment: 0 });
-
-            setTimeout(() => {
-              progress.report({ increment: 10 });
-            }, 1000);
-
-            setTimeout(() => {
-              progress.report({ increment: 40 });
-            }, 2000);
-
-            setTimeout(() => {
-              progress.report({ increment: 50 });
-            }, 3000);
-
-            const p = new Promise<void>((resolve) => {
-              setTimeout(() => {
-                resolve();
-              }, 4000);
-            });
-
-            return p;
-          }
-        );
-      
+        
+        generateRootFolder();
       }
     )
   );
