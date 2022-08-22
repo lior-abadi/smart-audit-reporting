@@ -30,5 +30,11 @@
     "label": "indexed-events",
     "title": "No indexed parameters while emitting events",
     "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event."
+  },
+  {
+    "type": "low",
+    "label": "transfer-lack-return-check",
+    "title": "Lack of boolean return check on transfer or transferFrom",
+    "prompt": "There are some parts of the code where transfers are performed without validating their return values. Although no major issues where found regarding this, it could lead to undesired scenarios. It is advised to wrap transfers with a require statement."
   }
 ]

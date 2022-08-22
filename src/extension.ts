@@ -109,97 +109,98 @@ export function activate(context: vscode.ExtensionContext) {
       let nanFindings = new Map<string, Finding>();
 
       let dirFiles = await getSolFiles();
+      console.log(dirFiles)
 
       if (dirFiles !== undefined) {
-        // for (let file of dirFiles){
+        for (let file of dirFiles) {
+          // Create a vscode.TextDocument instance of current solidity file
+          let doc = await vscode.workspace.openTextDocument(file);
 
-        // }
+          // ============ LOOP OVER THE LINES OF A DOCUMENT ============
+          // Loop over a document and check if there are findings reported. TODO: be wrapped into a outer loop for each .sol file.
+          if (doc.lineCount !== 0) {
+            let lineAmt: number = doc.lineCount;
+            for (let lineIndex = 0; lineIndex < lineAmt; lineIndex++) {
+              let currentLine: vscode.TextLine = doc.lineAt(lineIndex);
 
-        // Create a vscode.TextDocument instance of current solidity file
-        let doc = await vscode.workspace.openTextDocument(dirFiles[0]);
+              // Check if the evaluated line contains a finding
+              if (currentLine.text.toUpperCase().includes("@SAR")) {
+                let findingText: string = currentLine.text.slice(
+                  currentLine.text.indexOf("@"),
+                  currentLine.text.length
+                );
 
-        // ============ LOOP OVER THE LINES OF A DOCUMENT ============
-        // Loop over a document and check if there are findings reported. TODO: be wrapped into a outer loop for each .sol file.
-        if (doc.lineCount !== 0) {
-          let lineAmt: number = doc.lineCount;
-          for (let lineIndex = 0; lineIndex < lineAmt; lineIndex++) {
-            let currentLine: vscode.TextLine = doc.lineAt(lineIndex);
+                let findingSeverity: string = findingText[5];
+                let findingLabel: string = findingText.slice(
+                  7,
+                  findingText.length
+                );
 
-            // Check if the evaluated line contains a finding
-            if (currentLine.text.toUpperCase().includes("@SAR")) {
-              let findingText: string = currentLine.text.slice(
-                currentLine.text.indexOf("@"),
-                currentLine.text.length
-              );
+                // Evaluate the type of finding against the current SAR database
+                let currentFileName: string | undefined = file
+                  .toString()
+                  .split("/")
+                  .pop();
+                let currentLoc: number | undefined = lineIndex + 1;
+                let currentContent: string | undefined =
+                  currentLine.text.trim();
 
-              let findingSeverity: string = findingText[5];
-              let findingLabel: string = findingText.slice(
-                7,
-                findingText.length
-              );
+                let currentAppearance: Appearance = {
+                  contractFile: currentFileName,
+                  loc: currentLoc,
+                  content: currentContent,
+                };
 
-              // Evaluate the type of finding against the current SAR database
-              let currentFileName: string | undefined = dirFiles[0]
-                .toString()
-                .split("/")
-                .pop();
-              let currentLoc: number | undefined = lineIndex + 1;
-              let currentContent: string | undefined = currentLine.text.trim();
+                // ============= FINDING PROCESSING =============
 
-              let currentAppearance: Appearance = {
-                contractFile: currentFileName,
-                loc: currentLoc,
-                content: currentContent,
-              };
+                // Get the content and mapping id.
+                let [mappingId, title, prompt]: [number, string, string] =
+                  getFindingContent(sarDatabase, findingSeverity, findingLabel);
+                // mappingId = 404: NaN ; mappingId = 0: Gas ; mappingId = 1: Low/QA
+                switch (mappingId) {
+                  case 404:
+                    storeFindings(
+                      sarDatabase,
+                      nanFindings,
+                      findingSeverity,
+                      findingLabel,
+                      title,
+                      prompt,
+                      currentAppearance
+                    );
+                    break;
 
-              // ============= FINDING PROCESSING =============
+                  case 0:
+                    storeFindings(
+                      sarDatabase,
+                      gasFindings,
+                      findingSeverity,
+                      findingLabel,
+                      title,
+                      prompt,
+                      currentAppearance
+                    );
+                    break;
 
-              // Get the content and mapping id.
-              let [mappingId, title, prompt]: [number, string, string] = getFindingContent(sarDatabase, findingSeverity, findingLabel);
-              // mappingId = 404: NaN ; mappingId = 0: Gas ; mappingId = 1: Low/QA
-              switch(mappingId) {
-                case 404:
-                  storeFindings(
-                    sarDatabase,
-                    nanFindings,
-                    findingSeverity,
-                    findingLabel,
-                    title,
-                    prompt,
-                    currentAppearance
-                  );
-                  break;
+                  case 1:
+                    storeFindings(
+                      sarDatabase,
+                      lowFindings,
+                      findingSeverity,
+                      findingLabel,
+                      title,
+                      prompt,
+                      currentAppearance
+                    );
+                    break;
 
-                case 0:
-                  storeFindings(
-                    sarDatabase,
-                    gasFindings,
-                    findingSeverity,
-                    findingLabel,
-                    title,
-                    prompt,
-                    currentAppearance
-                  );
-                  break;
-                
-                case 1:
-                  storeFindings(
-                    sarDatabase,
-                    lowFindings,
-                    findingSeverity,
-                    findingLabel,
-                    title,
-                    prompt,
-                    currentAppearance
-                  );
-                  break;
-
-                default:
-                  break;
+                  default:
+                    break;
+                }
               }
-
             }
           }
+
         }
         console.log(nanFindings);
         console.log(gasFindings);
