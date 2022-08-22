@@ -15,13 +15,14 @@ type Appearance = {
 
 // Structure of findings dictionary
 type Finding = {
+  type: string;
   title: string;
   prompt: string;
   appearances: Appearance[];
 };
 
 // Mapping for each finding (label ==> Finding) FindingMapping
-type FindingMapping = Map<string, Finding>
+type FindingMapping = Map<string, Finding>;
 
 // =============== HELPER FUNCTIONS ===============
 // Retrieves up to 200 *.sol files that are not inside node_modules
@@ -39,29 +40,52 @@ function isInDatabase(db: dbType, label: string): boolean {
     .toString()
     .toUpperCase()
     .includes(label.toUpperCase());
+
 }
 
+// Retrieves the content of a finding located in the SAR.json database.
+function getFindingContent(db: dbType, type:string, label: string): [title: string, prompt: string]{
+  
+  let findingInDB = db.find(item => item.label.toUpperCase() === label.toUpperCase())
+
+  if(findingInDB === undefined || findingInDB.type.toUpperCase()[0] !== type.toUpperCase()) {
+    console.log(`Entered the not found logic`)
+    console.log([label, db.filter(item => item.type.toUpperCase() === "NAN")[0].prompt])
+    return [label, db.filter(item => item.type.toUpperCase() === "NAN")[0].prompt]
+  }
+  console.log([findingInDB.title, findingInDB.prompt])
+  return [findingInDB.title, findingInDB.prompt]
+}
+
+// Stores each scrapped finding into a relevant mapping
 function storeFindings(
+  db: dbType,
   findingMapping: FindingMapping,
+  findingType: string,
   findingLabel: string,
   currentAppearance: Appearance
 ) {
+  // Retrieve the data from DB
+  let [findingTitle, findingPrompt] : [string, string] = getFindingContent(db, findingType, findingLabel);
+
   // Case: first time this label appears
   if (!findingMapping.has(findingLabel)) {
-    console.log(`Label not found`);
+    console.log(`First Time appearing`);
     findingMapping.set(findingLabel, {
-      title: findingLabel,
-      prompt: findingLabel,
+      type: findingType,
+      title: findingTitle,
+      prompt: findingPrompt,
       appearances: [currentAppearance],
     });
   } else {
     // This scenario covers the case where a not defined finding appears again
     // It is only needed to push it to the appearances array. Need to cache the prev. stored values
-    console.log(`Label found`);
+    console.log(`Appeared before`);
     let cacheFinding: Finding = findingMapping.get(findingLabel)!;
     cacheFinding.appearances.push(currentAppearance);
 
     findingMapping.set(findingLabel, {
+      type: cacheFinding.type,
       title: cacheFinding.title,
       prompt: cacheFinding.prompt,
       appearances: cacheFinding.appearances,
@@ -108,9 +132,6 @@ export function activate(context: vscode.ExtensionContext) {
                 findingText.length
               );
 
-              vscode.window.showWarningMessage(
-                `${findingLabel} + ${sarDatabase.gas.length} + ${findingSeverity}`
-              );
               // Evaluate the type of finding against the current SAR database
               let currentFileName: string | undefined = dirFiles[0]
                 .toString()
@@ -130,19 +151,44 @@ export function activate(context: vscode.ExtensionContext) {
               // ------ FINDINGS NOT FOUND ------
               // Save a finding that it is not in the database in order to feed it back to the user.
               if (!isInDatabase(sarDatabase, findingLabel)) {
-                storeFindings(nanFindings, findingLabel, currentAppearance);
+                // Due to the fact that is an unknown finding, we use the label as the content and title.
+                storeFindings(
+                  sarDatabase,
+                  nanFindings,
+                  "NaN",
+                  findingLabel,
+                  currentAppearance
+                );
                 continue; // This step avoids entering with a non existent finding into the known finding logic.
               }
 
               // ------ KNOWN FINDINGS WITHIN THE DATABASE ------
               // Will only reach the following lines if the finding is in the database.
-              console.log(
-                `Inside the known logic! For finding with label: ${findingLabel}`
-              );
+              if(findingSeverity.toUpperCase() === "G") {
+                storeFindings(
+                  sarDatabase,
+                  gasFindings,
+                  findingSeverity,
+                  findingLabel,
+                  currentAppearance
+                )
+              }
+              if(findingSeverity.toUpperCase() === "L") { // TODO: a L finding with a G in the @SAR slips out... prevent this.
+                storeFindings(
+                  sarDatabase,
+                  lowFindings,
+                  findingSeverity,
+                  findingLabel,
+                  currentAppearance
+                )
+              }
+
             }
           }
         }
         console.log(nanFindings);
+        console.log(gasFindings);
+        console.log(lowFindings)
       }
     })
   );

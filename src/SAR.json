@@ -1,28 +1,34 @@
-{
-    "gas": [ 
-        {
-            "label":"iter-incr",
-            "title": "Iterators could be increased differently",
-            "prompt":"Using ++i instead of i++ as the way to increase the iterator saves gas due to the fact that does not store temporarily the increased counter before returning it, returning the already increased counter instead."
-        },
-        {
-            "label":"unchecked",
-            "title": "Wrap counter modification within an unchecked block",
-            "prompt":"Increasing or decreasing the counter or any other number that has no risk of overflowing/underflowing inside an unchecked statement removes the compiler built-in checks saving gas each time the number is modified."
-        }
+[
+  {
+    "type": "NaN",
+    "label": "not-found",
+    "title": "Finding missing in the database",
+    "prompt": "The finding is missing in the database or has a typo."
+  },
 
-    ],
-    
-    "low" : [
-        {
-            "label":"two-step-process",
-            "title": "Key protocol role transfer should be a two step process",
-            "prompt":"Currently the transfer of key roles within the codebase is made on a single step. If an address is mistakenly given, ownership and/or control may be irreversibly lost. Make this a two step process."
-        },
-        {
-            "label":"indexed-events",
-            "title": "No indexed parameters while emitting events",
-            "prompt":"Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event."
-        }
-    ]
-}
+  {
+    "type": "gas",
+    "label": "iter-incr",
+    "title": "Iterators could be increased differently",
+    "prompt": "Using ++i instead of i++ as the way to increase the iterator saves gas due to the fact that does not store temporarily the increased counter before returning it, returning the already increased counter instead."
+  },
+  {
+    "type": "gas",
+    "label": "unchecked",
+    "title": "Wrap counter modification within an unchecked block",
+    "prompt": "Increasing or decreasing the counter or any other number that has no risk of overflowing/underflowing inside an unchecked statement removes the compiler built-in checks saving gas each time the number is modified."
+  },
+
+  {
+    "type": "low",
+    "label": "two-step-process",
+    "title": "Key protocol role transfer should be a two step process",
+    "prompt": "Currently the transfer of key roles within the codebase is made on a single step. If an address is mistakenly given, ownership and/or control may be irreversibly lost. Make this a two step process."
+  },
+  {
+    "type": "low",
+    "label": "indexed-events",
+    "title": "No indexed parameters while emitting events",
+    "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event."
+  }
+]
