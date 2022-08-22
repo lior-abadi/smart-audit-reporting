@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as sarDatabase from "./SAR.json"; // TODO: This should be pushed as a sample into the current workspace
 import * as flatten from "flat";
 
-// Types declarations
+// =============== TYPES DECLARATIONS ===============
 // A SAR database with findings
 type dbType = typeof sarDatabase;
 
@@ -20,27 +20,60 @@ type Finding = {
   appearances: Appearance[];
 };
 
+// Mapping for each finding (label ==> Finding) FindingMapping
+type FindingMapping = Map<string, Finding>
+
+// =============== HELPER FUNCTIONS ===============
+// Retrieves up to 200 *.sol files that are not inside node_modules
 async function getSolFiles(): Promise<vscode.Uri[] | undefined> {
   return await vscode.workspace.findFiles(
     "**/*.sol",
     "**/node_modules/**",
-    100
+    200
   );
 }
 
 function isInDatabase(db: dbType, label: string): boolean {
   const flatten_database: JSON = flatten(db);
-
   return Object.values(flatten_database)
     .toString()
     .toUpperCase()
     .includes(label.toUpperCase());
 }
 
+function storeFindings(
+  findingMapping: FindingMapping,
+  findingLabel: string,
+  currentAppearance: Appearance
+) {
+  // Case: first time this label appears
+  if (!findingMapping.has(findingLabel)) {
+    console.log(`Label not found`);
+    findingMapping.set(findingLabel, {
+      title: findingLabel,
+      prompt: findingLabel,
+      appearances: [currentAppearance],
+    });
+  } else {
+    // This scenario covers the case where a not defined finding appears again
+    // It is only needed to push it to the appearances array. Need to cache the prev. stored values
+    console.log(`Label found`);
+    let cacheFinding: Finding = findingMapping.get(findingLabel)!;
+    cacheFinding.appearances.push(currentAppearance);
+
+    findingMapping.set(findingLabel, {
+      title: cacheFinding.title,
+      prompt: cacheFinding.prompt,
+      appearances: cacheFinding.appearances,
+    });
+  }
+}
+
+// ======================= EXTENSION ========================
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("vsSAR.generateGeneralReport", async () => {
-      // Create the mappings that save the scarpped findings across the codebase.
+      // Create the mappings that save the scrapped findings across the codebase.
       let gasFindings = new Map<string, Finding>();
       let lowFindings = new Map<string, Finding>();
       let nanFindings = new Map<string, Finding>();
@@ -97,34 +130,15 @@ export function activate(context: vscode.ExtensionContext) {
               // ------ FINDINGS NOT FOUND ------
               // Save a finding that it is not in the database in order to feed it back to the user.
               if (!isInDatabase(sarDatabase, findingLabel)) {
-                // Case: first time this label appears
-                if (!nanFindings.has(findingLabel)) {
-                  console.log(`Label not found`);
-                  nanFindings.set(findingLabel, {
-                    title: findingLabel,
-                    prompt: findingLabel,
-                    appearances: [currentAppearance],
-                  });
-                } else {
-                  // This scenario covers the case where a not defined finding appears again
-                  // It is only needed to push it to the appearances array. Need to cache the prev. stored values
-                  console.log(`Label found`);
-                  let cacheFinding: Finding = nanFindings.get(findingLabel)!;
-                  cacheFinding.appearances.push(currentAppearance);
-
-                  nanFindings.set(findingLabel, {
-                    title: cacheFinding.title,
-                    prompt: cacheFinding.prompt,
-                    appearances: cacheFinding.appearances,
-                  });
-                }
-				continue; // This step avoids entering with a non existent finding into the known finding logic.
+                storeFindings(nanFindings, findingLabel, currentAppearance);
+                continue; // This step avoids entering with a non existent finding into the known finding logic.
               }
 
-              // KNOWN FINDINGS WITHIN THE DATABASE
-			  console.log(`Inside the known logic! For finding with label: ${findingLabel}`)
-              
-
+              // ------ KNOWN FINDINGS WITHIN THE DATABASE ------
+              // Will only reach the following lines if the finding is in the database.
+              console.log(
+                `Inside the known logic! For finding with label: ${findingLabel}`
+              );
             }
           }
         }
