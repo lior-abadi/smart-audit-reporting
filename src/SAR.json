@@ -20,21 +20,119 @@
   },
 
   {
-    "type": "low",
+    "type": "qa",
     "label": "two-step-process",
     "title": "Key protocol role transfer should be a two step process",
     "prompt": "Currently the transfer of key roles within the codebase is made on a single step. If an address is mistakenly given, ownership and/or control may be irreversibly lost. Make this a two step process."
   },
   {
-    "type": "low",
+    "type": "qa",
     "label": "indexed-events",
     "title": "No indexed parameters while emitting events",
     "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event."
   },
   {
+    "type": "qa",
+    "label": "inconsistent-error-handling",
+    "title": "Inconsistent ways of execution reverting/error handling",
+    "prompt": "There are several parts of the codebase where `require` statements with a revert string is used, and some other parts where `if statements` with custom errors are used. It is advised to unify the criteria regarding error handling. It is remarked that the boolean check needs to be inverted while going from one method to another (the require reverts on false statements whereas true statements trigger custom errors inside if statements). Also, as a reminder, using custom errors from `0.8.x` provide a clear feedback to users while saving gas against error strings."
+  },
+  {
+    "type": "qa",
+    "label": "reentrancy-modifier-order",
+    "title": "The reentrancy prevention modifier should appear before any other modifier",
+    "prompt": "It is a good practice to check reentrancy first before any other check or calculus performed within modifiers to provide a better security to the protected function."
+  },
+  {
+    "type": "qa",
+    "label": "external-instead-of-public",
+    "title": "Public functions that are not called by the contract should be external",
+    "prompt": "If a function is not meant to be called inside a contract, it should be marked as external instead. According to the [Solidity Docs](https://docs.soliditylang.org/en/latest/contracts.html#function-overriding) an inherited virtual external function can be overridden and its behavior can be changed as public."
+  },
+  {
+    "type": "qa",
+    "label": "avoid-assembly",
+    "title": "Avoid using in line assembly for available built-in methods",
+    "prompt": "Using inline assembly for methods that are built-in within the current compiler versions avoid the need to use assembly which can make some compilers to interpret the code as complex. It is advised using inline assembly only when there is no other way to perform the intended behavior or when specific goals are meant to be achieved (such as optimizations)."
+  },
+  {
+    "type": "qa",
+    "label": "avoid-magic-numbers",
+    "title": "Constants should be declared instead of magic numbers",
+    "prompt": "While using constants across the codebase as comparing values, boundaries, among others; it is advisable to declare a self-explanatory constant instead of using numeric literals to provide more transparency."
+  },
+  {
+    "type": "qa",
+    "label": "immutable-instead-of-constant",
+    "title": "Expressions that compute constant values via subsequent calls such as `keccak256` could be declared as immutable",
+    "prompt": "The main difference between both variable availability modifiers is that the `constant` calculates the hash each time it is referenced whereas `immutable` performs this calculation on deployment. More about this could be read [here](https://github.com/ethereum/solidity/issues/9232#issuecomment-646131646)."
+  },
+  {
+    "type": "qa",
+    "label": "use-scientific-notation",
+    "title": "Use scientific notation (1e8) instead of exponential notation (1 * 10**8)",
+    "prompt": "For large numbers it is more readable and understandable the scientific notation rather than the exponentiation (which essentially can be mistakenly interpreted as multiplication by a glance)."
+  },
+  {
+    "type": "qa",
+    "label": "only-caps-for-constants",
+    "title": "Capped variable names should be reserved for constant or immutable variables",
+    "prompt": "For the scenarios where the variable name should differ depending its origin, a pure or view function could be used instead to make this differentiation. Openzeppelin performs this strategy [here](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/76eee35971c2541585e05cbf258510dda7b2fbc6/contracts/token/ERC20/extensions/draft-IERC20Permit.sol#L59)"
+  },
+  {
+    "type": "qa",
+    "label": "file-missing-natspec",
+    "title": "File Missing Natspec",
+    "prompt": "It is important adding Natspec to every contract explaining their purpose and what they are intended to do."
+  },
+  {
+    "type": "qa",
+    "label": "avoid-ecrecover-directly",
+    "title": "Signatures recovered directly with `ecrecover()` can be malleable",
+    "prompt": "It is advisable to consider using a third party library that avoids any signature malleability scenario that may occur while recovering signatures directly with `ecrecover()` (such as OpenZeppelin's `ECDSA`)."
+  },
+
+
+  {
     "type": "low",
     "label": "transfer-lack-return-check",
     "title": "Lack of boolean return check on transfer or transferFrom",
-    "prompt": "There are some parts of the code where transfers are performed without validating their return values. Although no major issues where found regarding this, it could lead to undesired scenarios. It is advised to wrap transfers with a require statement."
+    "prompt": "There are some implementations of ERC20 tokens that do not revert if a transfer fails. Each transfer method has a boolean return that points to its success (or failure) and it is returned after a transfer is performed. If their return value is not checked a transfer may be failing silently having uncertain outcomes ranging from leaks of value to massive thefts. It is advisable wrapping each call to `transfer` and `transferFrom` with a `require` statement to enforce their truth."
+  },
+  {
+    "type": "low",
+    "label": "open-todo",
+    "title": "Open TODOs across the codebase",
+    "prompt": "Having open TODO comments across the codebase not only decrease its quality but also may show non implemented features which could provide a leak of possible attack vectors. It is advised to resolve every single TODO before deploying. For the record, any implementation or feature that may result from resolving an open TODO will be out of the scope of this audit and the plausible impacts that may derive from their implementations may require further audits to be determined."
+  },
+  {
+    "type": "low",
+    "label": "revert-not-properly-bubbled",
+    "title": "Reverts are not properly bubbled up if their length is shorter than 68",
+    "prompt": "While checking for revert strings strictly equal than zero, any errors which length is shorter than 68 won't be covered by the mentioned strict equality causing the code not to revert via the intended way. More about this issue can be seen on [this discussion](https://ethereum.stackexchange.com/questions/83528/how-can-i-get-the-revert-reason-of-a-call-in-solidity-so-that-i-can-use-it-in-th/83529#83529)."
+  },
+  {
+    "type": "low",
+    "label": "unused-receive-fallbacks",
+    "title": "Empty or Unused `receive` or `fallback` function",
+    "prompt": "If the mentioned functions are meant to be used they should implement a logic inside them or the contract itself should show a clear usage and dependance of them. If the contract is not intended to handle value they should revert or even not be implemented."
+  },
+  {
+    "type": "low",
+    "label": "missing-zero-address-check",
+    "title": "No Zero Address checks performed when assigning address values",
+    "prompt": "It is debatable if it is really needed to check that an address is not the `address(0)` while setting values for state variables. Based on past attacks or leaks that where done because of a lack of checks while setting up address values, it is advised to perform a zero address check on the following cases: "
+  },
+  {
+    "type": "low",
+    "label": "insufficient-protection-sensitive-data",
+    "title": "Insufficient protection of sensitive data",
+    "prompt": "The `hardhat.config.ts` uses sensitive information imported from an un-committed environment file. The usage of either `.env` imported variables or even plain pasted keys make it easier for an attacker to compromise the keys used for monitoring, deployment, testing and even if wallet private keys are used in such way funds can be compromised. The following data could be compromised if a leak happens or if the `.gitignore` file is mistakenly deleted according to the imports performed on `hardhat.config.ts`: "
+  },
+  {
+    "type": "low",
+    "label": "avoid-abiencodepacked",
+    "title": "Using abi.encodePacked before hashing for dynamic values can lead to hash collisions",
+    "prompt": "The mentioned function concatenates directly types that are shorter than 32 bytes without padding or sign extending the value. For further information, the following link of the [official doc](https://docs.soliditylang.org/en/v0.8.13/abi-spec.html#non-standard-packed-mode) can be checked. Essentially, it is recommended using `abi.encode()` instead of `encodePacked()` because the first one pads the values across `32 bytes`.  According to the cited link: >If you use `keccak256(abi.encodePacked(a, b))` and both a and b are dynamic types, it is easy to craft collisions in the hash value by moving parts of a into b and vice-versa. More specifically, `abi.encodePacked(\"a\", \"bc\") == abi.encodePacked(\"ab\", \"c\")`. If you use abi.encodePacked for signatures, authentication or data integrity, make sure to always use the same types and check that at most one of them is dynamic. Unless there is a compelling reason, abi.encode should be preferred."
   }
 ]
