@@ -212,13 +212,13 @@ function formatFindings(finding: Finding, id: number): string {
 
   for (let singleAppearance of finding.appearances) {
     let cacheAppearance: string =
-      "`" +
+      "```" +
       singleAppearance.contractFile +
-      " L" +
+      "   L" +
       singleAppearance.loc +
-      "  " +
+      ":       " +
       singleAppearance.content +
-      "` <br>";
+      "``` <br>";
     packedAppearances = packedAppearances + cacheAppearance;
   }
   return (
@@ -293,6 +293,9 @@ function str2arrayBuffer(text: string): Uint8Array {
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("vsSAR.generateGeneralReport", async () => {
+      vscode.window.showInformationMessage(
+        `SAReporting: Generating general report`
+      );
       // Create the mappings that save the scrapped findings across the codebase.
       let nanFindings = new Map<string, Finding>();
       let gasFindings = new Map<string, Finding>();
