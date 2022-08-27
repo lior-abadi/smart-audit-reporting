@@ -86,98 +86,98 @@
   },
 
   {
-    "type": "qa",
+    "type": "n",
     "label": "two-step-process",
     "title": "Key protocol role transfer should be a two step process",
     "prompt": "Currently the transfer of key roles within the codebase is made on a single step. If an address is mistakenly given, ownership and/or control may be irreversibly lost. Make this a two step process.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "indexed-events",
     "title": "No indexed parameters while emitting events",
     "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "inconsistent-error-handling",
     "title": "Inconsistent ways of execution reverting/error handling",
     "prompt": "There are several parts of the codebase where `require` statements with a revert string is used, and some other parts where `if statements` with custom errors are used. It is advised to unify the criteria regarding error handling. It is remarked that the boolean check needs to be inverted while going from one method to another (the require reverts on false statements whereas true statements trigger custom errors inside if statements). Also, as a reminder, using custom errors from `0.8.x` provide a clear feedback to users while saving gas against error strings.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "reentrancy-modifier-order",
     "title": "The reentrancy prevention modifier should appear before any other modifier",
     "prompt": "It is a good practice to check reentrancy first before any other check or calculus performed within modifiers to provide a better security to the protected function.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "external-instead-of-public",
     "title": "Public functions that are not called by the contract should be external",
     "prompt": "If a function is not meant to be called inside a contract, it should be marked as external instead. According to the [Solidity Docs](https://docs.soliditylang.org/en/latest/contracts.html#function-overriding) an inherited virtual external function can be overridden and its behavior can be changed as public.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "avoid-assembly",
     "title": "Avoid using in line assembly for available built-in methods",
     "prompt": "Using inline assembly for methods that are built-in within the current compiler versions avoid the need to use assembly which can make some compilers to interpret the code as complex. It is advised using inline assembly only when there is no other way to perform the intended behavior or when specific goals are meant to be achieved (such as optimizations).",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "avoid-magic-numbers",
     "title": "Constants should be declared instead of magic numbers",
     "prompt": "While using constants across the codebase as comparing values, boundaries, among others; it is advisable to declare a self-explanatory constant instead of using numeric literals to provide more transparency.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "immutable-instead-of-constant",
     "title": "Expressions that compute constant values via subsequent calls such as `keccak256` could be declared as immutable",
     "prompt": "The main difference between both variable availability modifiers is that the `constant` calculates the hash each time it is referenced whereas `immutable` performs this calculation on deployment. More about this could be read [here](https://github.com/ethereum/solidity/issues/9232#issuecomment-646131646).",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "use-scientific-notation",
     "title": "Use scientific notation (1e8) instead of exponential notation (1 * 10**8)",
     "prompt": "For large numbers it is more readable and understandable the scientific notation rather than the exponentiation (which essentially can be mistakenly interpreted as multiplication by a glance).",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "only-caps-for-constants",
     "title": "Capped variable names should be reserved for constant or immutable variables",
     "prompt": "For the scenarios where the variable name should differ depending its origin, a pure or view function could be used instead to make this differentiation. Openzeppelin performs this strategy [here](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/76eee35971c2541585e05cbf258510dda7b2fbc6/contracts/token/ERC20/extensions/draft-IERC20Permit.sol#L59)",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "file-missing-natspec",
     "title": "File Missing Natspec",
     "prompt": "It is important adding Natspec to every contract explaining their purpose and what they are intended to do.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "avoid-ecrecover-directly",
     "title": "Signatures recovered directly with `ecrecover()` can be malleable",
     "prompt": "It is advisable to consider using a third party library that avoids any signature malleability scenario that may occur while recovering signatures directly with `ecrecover()` (such as OpenZeppelin's `ECDSA`).",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "use-time-units",
     "title": "Time based variables should use built-in time units",
     "prompt": "The compiler provides [built-in time based units](https://docs.soliditylang.org/en/latest/units-and-global-variables.html#time-units) which values are expressed as seconds in the end. There are available suffixes like `seconds`, `minutes`, `hours`, `days` and `weeks` that could be used after literal numbers.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "long-line-of-code",
     "title": "Long Lines of Code",
     "prompt": "Some lines of code are too long. In favour of readability and a better experience while reading the code, it is advisable to determine a character limit per line of code in order to prevent users from right-left scrolling in order to read a full line. Currently, Github adds a lateral scroll bar at 164 chars.",
@@ -191,21 +191,21 @@
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "inconsistent-floating-pragma",
     "title": "Inconsistent way of declaring the pragma version",
     "prompt": "The codebase mixes the ways `pragma` version is declared. Commonly codebases declare the pragma version with `^` or strictly. It is advised to unify the criteria regarding this issue.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "missing-spdx",
     "title": "Missing SPDX License Identifier",
     "prompt": "It is a good practice to specify under which license is a contract deployed, and if no license is meant to be used the UNLICENSED identifier could be declared.",
     "path": ""
   },
   {
-    "type": "qa",
+    "type": "n",
     "label": "modifier-instead-of-require",
     "title": "Repeated `require` statements or gate controls could be refactored to a modifier",
     "prompt": "Whenever the same checks are needed to be performed many times across the codebase, it is advised to refactor them as modifiers or even functions in favour of readability and performance of the code.",

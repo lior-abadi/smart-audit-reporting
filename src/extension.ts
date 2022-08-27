@@ -1,8 +1,12 @@
 import { TextEncoder } from "util";
+import { Marked } from '@ts-stack/markdown';
 import * as vscode from "vscode";
+import * as localfs from "fs/promises";
+import path = require("path");
 
 // Base template of findings that will be injected into the project directory.
 import * as sampleDatabase from "./SAR.json";
+
 
 // =============== TYPES DECLARATIONS ===============
 // A SAR database with findings
@@ -29,7 +33,7 @@ type Finding = {
   appearances: Appearance[];
 };
 
-// Mapping for each finding (label ==> Finding) FindingMapping
+// Mapping for each finding (label ==> Finding)
 type FindingMapping = Map<string, Finding>;
 
 // =============== HELPER FUNCTIONS ===============
@@ -42,7 +46,7 @@ async function getSolFiles(): Promise<vscode.Uri[] | undefined> {
   );
 }
 
-// Retrieves the content of a finding located in the SAR.json database.
+// Retrieves the content of a finding located in the SAR.json database
 function getFindingContent(
   db: FindingDatabase,
   type: string,
@@ -67,8 +71,8 @@ function getFindingContent(
   if (type.toUpperCase() === "G")
     return [0, findingInDB.title, findingInDB.prompt];
 
-  // QA finding
-  if (type.toUpperCase() === "Q")
+  // NC finding
+  if (type.toUpperCase() === "N")
     return [1, findingInDB.title, findingInDB.prompt];
 
   // L finding
@@ -117,43 +121,76 @@ async function generateRootFolder(db: FindingDatabase) {
   if (vscode.workspace.workspaceFolders !== undefined) {
     // Generating the SAR folder within the root of the project
     let f = vscode.workspace.workspaceFolders[0].uri.fsPath;
-    let parsedUri = vscode.Uri.parse(`${f}/SAR`);
-    let parsedFileName = vscode.Uri.parse(`${f}/SAR/SARdatabase.json`);
-
     let jsonDb = JSON.stringify(db, null, " ");
 
-    let alreadyCreatedMsg: string[] = [
-      "SAReporting: A SAR folder was already on the root folder.",
-      "SAReporting: A SAR findings database was already created.",
-    ];
+    let foldersUri: vscode.Uri[] = [
+      vscode.Uri.parse(`${f}/SAR`),
+      vscode.Uri.parse(`${f}/SAR/SARFindings`),
+      vscode.Uri.parse(`${f}/SAR/Reports`)
+    ]
 
-    let generatedMsg: string[] = [
-      "SAReporting: Generated Base Folder",
-      "SAReporting: Generated Findings Sample Database",
-    ];
+    let databaseUri: vscode.Uri = vscode.Uri.parse(`${f}/SAR/SARdatabase.json`);
 
-    for (let index = 0; index < 2; index++) {
-      let currentUri: vscode.Uri;
-      index == 0 ? (currentUri = parsedUri) : (currentUri = parsedFileName);
+    // Create root folders
+    for (let currentUri of foldersUri) {
+      let folderName: string = `${currentUri.path.substring( currentUri.path.lastIndexOf("/") + 1)}`
       try {
-        await vscode.workspace.fs.stat(parsedUri);
-        vscode.window.showWarningMessage(alreadyCreatedMsg[index]);
+        await vscode.workspace.fs.stat(currentUri);
+        vscode.window.showWarningMessage(`SAReporting: ${folderName} already exists.`);
       } catch {
-        index == 0
-          ? vscode.workspace.fs.createDirectory(parsedUri)
-          : vscode.workspace.fs.writeFile(
-              parsedFileName,
-              str2arrayBuffer(jsonDb)
-            );
-
-        vscode.window.showInformationMessage(generatedMsg[index]);
+         vscode.workspace.fs.createDirectory(currentUri)
+         vscode.window.showInformationMessage(`SAReporting: The folder ${folderName} was created.`);
       }
     }
+
+    // Inject a database from the extension to the root
+    try {
+      await vscode.workspace.fs.stat(databaseUri);
+      vscode.window.showWarningMessage(`SAReporting: The database was already on the SAR directory.`);
+    } catch {
+      vscode.workspace.fs.writeFile(
+        databaseUri,
+        str2arrayBuffer(jsonDb)
+      );
+       vscode.window.showInformationMessage(`SAReporting: The database was created.}`);
+    }
+
+    // Inject each markdown finding file to the root
+    await getFindingContentFromDatabase(foldersUri[1]);
+
   } else {
     let message: string =
       "Unable to resolve root directory. Create the findings file manually.";
     vscode.window.showErrorMessage(message);
   }
+}
+
+async function getFindingContentFromDatabase(targetUri: vscode.Uri) {
+  let markdownContent = await localfs.readdir( path.resolve(__dirname, "SARFindings"), {withFileTypes:true})
+
+  for(let content of markdownContent){
+    let copyUri: vscode.Uri = vscode.Uri.parse(path.resolve(__dirname, "SARFindings") + `/${content.name}`)
+    let fileName: string = `${copyUri.path.substring( copyUri.path.lastIndexOf("/") + 1)}`
+    try{
+      await vscode.workspace.fs.copy(copyUri, vscode.Uri.parse(targetUri.path + `/${content.name}`), {overwrite: false})
+    }catch(err){
+      vscode.window.showWarningMessage(`SAReporting: The following file was already copied: ${fileName}.`);
+    }
+  }
+}
+
+function formatFindings(finding: Finding, id: number): string {
+  
+  let findingTitle: string = `${finding.type.toUpperCase()}-${id}` + " " + finding.title + "<br>"
+  let findingContent: string = finding.prompt
+
+  return findingTitle + findingContent
+}
+
+// Generate a Severity.md report per severity of all findings.
+function generateReport(findingMapping: FindingMapping): string[] {
+  // generate a markdown table with the summary of each finding and their N° appearances 
+  return Array.from(findingMapping.keys());
 }
 
 // Retrieves the data from the Database located within the project folder (which can be modified by the user)
@@ -177,6 +214,7 @@ async function getDatabase(): Promise<FindingDatabase | undefined> {
   }
 }
 
+// Generates a byte buffer from a string 
 function str2arrayBuffer(text: string): Uint8Array {
   return new TextEncoder().encode(text);
 }
@@ -188,7 +226,7 @@ export function activate(context: vscode.ExtensionContext) {
       // Create the mappings that save the scrapped findings across the codebase.
       let nanFindings = new Map<string, Finding>();
       let gasFindings = new Map<string, Finding>();
-      let qaFindings = new Map<string, Finding>();
+      let ncFindings = new Map<string, Finding>();
       let lowFindings = new Map<string, Finding>();
 
       let sarDatabase: FindingDatabase | undefined = await getDatabase();
@@ -199,7 +237,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showWarningMessage(`SAReporting: No Solidity files found.`);
         return;
       }
-
+      
+      // ============ LOOP OVER THE SOLIDITY DOCUMENTS ============
       for (let file of dirFiles) {
         // Create a vscode.TextDocument instance of current solidity file
         let doc = await vscode.workspace.openTextDocument(file);
@@ -245,7 +284,7 @@ export function activate(context: vscode.ExtensionContext) {
               // Get the content and mapping id.
               let [mappingId, title, prompt]: [number, string, string] =
                 getFindingContent(sarDatabase, findingSeverity, findingLabel);
-              // mappingId = 404: NaN ; mappingId = 0: Gas ; mappingId = 1: QA mappingId = 2: Low
+              // mappingId = 404: NaN ; mappingId = 0: Gas ; mappingId = 1: NC mappingId = 2: Low
               switch (mappingId) {
                 case 404:
                   storeFindings(
@@ -274,7 +313,7 @@ export function activate(context: vscode.ExtensionContext) {
                 case 1:
                   storeFindings(
                     sarDatabase,
-                    qaFindings,
+                    ncFindings,
                     findingSeverity,
                     findingLabel,
                     title,
@@ -302,14 +341,19 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
       }
-      if(nanFindings.size === 0 && gasFindings.size === 0 && qaFindings.size === 0 && lowFindings.size === 0){
+      if(nanFindings.size === 0 && gasFindings.size === 0 && ncFindings.size === 0 && lowFindings.size === 0){
         vscode.window.showWarningMessage(`SAReporting: No findings were recognized. Try tagging them.`);
       }
-
-      console.log(nanFindings);
-      console.log(gasFindings);
-      console.log(qaFindings);
-      console.log(lowFindings);
+      let allFindings: FindingMapping[] = [nanFindings, gasFindings, ncFindings, lowFindings]
+      // // ============ GENERATE EACH REPORT ============
+      // for(let findingMapping of allFindings){
+      //   (console.log(generateReport(findingMapping)));
+      //   let firstFindingKey: string = generateReport(findingMapping)[0]
+      //   console.log(Marked.parse(formatFindings(findingMapping.get(firstFindingKey)!, 1)))       
+      // } 
+      
+      for(let findingMapping of allFindings) (console.log(findingMapping));
+      
     }),
 
     vscode.commands.registerCommand(
