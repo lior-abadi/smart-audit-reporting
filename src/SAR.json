@@ -3,93 +3,213 @@
     "type": "NaN",
     "label": "not-found",
     "title": "Finding missing in the database",
-    "prompt": "The finding is missing in the database, has a typo or the wrong type of severity"
+    "prompt": "The finding is missing in the database, has a typo or the wrong type of severity",
+    "path": ""
   },
 
   {
     "type": "gas",
     "label": "iter-incr",
     "title": "Iterators could be increased differently",
-    "prompt": "Using ++i instead of i++ as the way to increase the iterator saves gas due to the fact that does not store temporarily the increased counter before returning it, returning the already increased counter instead."
+    "prompt": "Using ++i instead of i++ as the way to increase the iterator saves gas due to the fact that does not store temporarily the increased counter before returning it, returning the already increased counter instead.",
+    "path": ""
+  },
+  {
+    "type": "gas",
+    "label": "use-custom-error",
+    "title": "Use custom errors instead of revert strings",
+    "prompt": "Custom errors available from `0.8.4` provide a clear and cheaper way of reverting saving around `50 gas` per reversal. Also they provide a cleaner feedback to the user if defined properly in a descriptive way.",
+    "path": ""
   },
   {
     "type": "gas",
     "label": "unchecked",
     "title": "Wrap counter modification within an unchecked block",
-    "prompt": "Increasing or decreasing the counter or any other number that has no risk of overflowing/underflowing inside an unchecked statement removes the compiler built-in checks saving gas each time the number is modified."
+    "prompt": "Increasing or decreasing the counter or any other number that has no risk of overflowing/underflowing inside an unchecked statement removes the compiler built-in checks saving gas each time the number is modified.",
+    "path": ""
+  },
+  {
+    "type": "gas",
+    "label": "avoid-using-this",
+    "title": "Using `this` keyword for calling external functions waste gas",
+    "prompt": "If a function is needed to be available either internally and externally, it should be declared as `public` instead of external. Using the `this` keyword for calling external functions wastes overhead gas.",
+    "path": ""
+  },
+  {
+    "type": "gas",
+    "label": "multiple-mappings",
+    "title": "Multiple mappings could be combined",
+    "prompt": "If there are used mappings with repeated types of keys, it is a sign that they could be refactored into a single mapping that points to a struct when appropriate. Depending on the data types and their sizes, this could avoid triggering a Gsset operation (consumes 20,000 gas while changing from zero to a non zero value). Because memory slots are calculated via `keccak256`, reducing the amount of slots also reduce for the compiler the need to compute the keys' hash.",
+    "path": ""
+  }, 
+  {
+    "type": "gas",
+    "label": "constructed-variables-should-be-immutable",
+    "title": "Variables set only while constructing should be `immutable`",
+    "prompt": "This operation reduces the gas cost each time a variable is consulted and also avoids a Gsset (20,000 gas) while constructing. ",
+    "path": ""
+  }, 
+  {
+    "type": "gas",
+    "label": "pack-variables-on-struct",
+    "title": "Struct variables could be packed",
+    "prompt": "Each storage slot has `256bits` or `32bytes`. If two or more subsequent variables fit on the same slot (e.g. `uint128` `uint128`), they will be concatenated saving space and reducing the need to append another slot saving extra Gssets (20,000 gas units).",
+    "path": ""
+  }, 
+  {
+    "type": "gas",
+    "label": "cache-variable",
+    "title": "Cache state variables in stack instead of constantly reading them from storage.",
+    "prompt": "State variables that are consulted several times during an execution could be cached into the memory stack in order to prevent reading them from storage. Accessing a state variable for the first time `Gcoldsload` uses `2,100 gas` and then `Gwarmaccess` uses `100 gas` for the subsequent calls. ",
+    "path": ""
+  }, 
+  {
+    "type": "gas",
+    "label": "cache-array-length",
+    "title": "Cache the array length before looping if it is fixed.",
+    "prompt": "If a fixed-length array is meant to be looped over, its size could be cache before looping saving per loop (excluding the first one which access the data in cold) a `Gwarmaccess` (100 gas), a `MLOAD` for memory arrays (3 gas) and `CALLDATALOAD` for calldata arrays (3 gas)",
+    "path": ""
+  },
+  {
+    "type": "gas",
+    "label": "long-revert-string",
+    "title": "Revert strings that exceed 32 bytes use more slots.",
+    "prompt": "Each memory slot has 32 bytes. If a revert string size exceeds this limit, more slots will be used incurring in an `MSTORE` (adding up `3 gas` consumption). It is advised also using custom errors as for solidity 0.8.x which provide a clear and cheap way of reverting.",
+    "path": ""
+  },
+  {
+    "type": "gas",
+    "label": "private-for-constants",
+    "title": "Constants that are `private` instead of `public` save gas.",
+    "prompt": "Because constant variables should be declared an initialized as a one-liner, their value could be easily retrieved by reading directly the source code. Removing the `public` modifier and using `private` instead, does not create a function getter for the public constant saving around `3500 gas` on deployment.",
+    "path": ""
   },
 
   {
     "type": "qa",
     "label": "two-step-process",
     "title": "Key protocol role transfer should be a two step process",
-    "prompt": "Currently the transfer of key roles within the codebase is made on a single step. If an address is mistakenly given, ownership and/or control may be irreversibly lost. Make this a two step process."
+    "prompt": "Currently the transfer of key roles within the codebase is made on a single step. If an address is mistakenly given, ownership and/or control may be irreversibly lost. Make this a two step process.",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "indexed-events",
     "title": "No indexed parameters while emitting events",
-    "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event."
+    "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event.",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "inconsistent-error-handling",
     "title": "Inconsistent ways of execution reverting/error handling",
-    "prompt": "There are several parts of the codebase where `require` statements with a revert string is used, and some other parts where `if statements` with custom errors are used. It is advised to unify the criteria regarding error handling. It is remarked that the boolean check needs to be inverted while going from one method to another (the require reverts on false statements whereas true statements trigger custom errors inside if statements). Also, as a reminder, using custom errors from `0.8.x` provide a clear feedback to users while saving gas against error strings."
+    "prompt": "There are several parts of the codebase where `require` statements with a revert string is used, and some other parts where `if statements` with custom errors are used. It is advised to unify the criteria regarding error handling. It is remarked that the boolean check needs to be inverted while going from one method to another (the require reverts on false statements whereas true statements trigger custom errors inside if statements). Also, as a reminder, using custom errors from `0.8.x` provide a clear feedback to users while saving gas against error strings.",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "reentrancy-modifier-order",
     "title": "The reentrancy prevention modifier should appear before any other modifier",
-    "prompt": "It is a good practice to check reentrancy first before any other check or calculus performed within modifiers to provide a better security to the protected function."
+    "prompt": "It is a good practice to check reentrancy first before any other check or calculus performed within modifiers to provide a better security to the protected function.",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "external-instead-of-public",
     "title": "Public functions that are not called by the contract should be external",
-    "prompt": "If a function is not meant to be called inside a contract, it should be marked as external instead. According to the [Solidity Docs](https://docs.soliditylang.org/en/latest/contracts.html#function-overriding) an inherited virtual external function can be overridden and its behavior can be changed as public."
+    "prompt": "If a function is not meant to be called inside a contract, it should be marked as external instead. According to the [Solidity Docs](https://docs.soliditylang.org/en/latest/contracts.html#function-overriding) an inherited virtual external function can be overridden and its behavior can be changed as public.",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "avoid-assembly",
     "title": "Avoid using in line assembly for available built-in methods",
-    "prompt": "Using inline assembly for methods that are built-in within the current compiler versions avoid the need to use assembly which can make some compilers to interpret the code as complex. It is advised using inline assembly only when there is no other way to perform the intended behavior or when specific goals are meant to be achieved (such as optimizations)."
+    "prompt": "Using inline assembly for methods that are built-in within the current compiler versions avoid the need to use assembly which can make some compilers to interpret the code as complex. It is advised using inline assembly only when there is no other way to perform the intended behavior or when specific goals are meant to be achieved (such as optimizations).",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "avoid-magic-numbers",
     "title": "Constants should be declared instead of magic numbers",
-    "prompt": "While using constants across the codebase as comparing values, boundaries, among others; it is advisable to declare a self-explanatory constant instead of using numeric literals to provide more transparency."
+    "prompt": "While using constants across the codebase as comparing values, boundaries, among others; it is advisable to declare a self-explanatory constant instead of using numeric literals to provide more transparency.",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "immutable-instead-of-constant",
     "title": "Expressions that compute constant values via subsequent calls such as `keccak256` could be declared as immutable",
-    "prompt": "The main difference between both variable availability modifiers is that the `constant` calculates the hash each time it is referenced whereas `immutable` performs this calculation on deployment. More about this could be read [here](https://github.com/ethereum/solidity/issues/9232#issuecomment-646131646)."
+    "prompt": "The main difference between both variable availability modifiers is that the `constant` calculates the hash each time it is referenced whereas `immutable` performs this calculation on deployment. More about this could be read [here](https://github.com/ethereum/solidity/issues/9232#issuecomment-646131646).",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "use-scientific-notation",
     "title": "Use scientific notation (1e8) instead of exponential notation (1 * 10**8)",
-    "prompt": "For large numbers it is more readable and understandable the scientific notation rather than the exponentiation (which essentially can be mistakenly interpreted as multiplication by a glance)."
+    "prompt": "For large numbers it is more readable and understandable the scientific notation rather than the exponentiation (which essentially can be mistakenly interpreted as multiplication by a glance).",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "only-caps-for-constants",
     "title": "Capped variable names should be reserved for constant or immutable variables",
-    "prompt": "For the scenarios where the variable name should differ depending its origin, a pure or view function could be used instead to make this differentiation. Openzeppelin performs this strategy [here](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/76eee35971c2541585e05cbf258510dda7b2fbc6/contracts/token/ERC20/extensions/draft-IERC20Permit.sol#L59)"
+    "prompt": "For the scenarios where the variable name should differ depending its origin, a pure or view function could be used instead to make this differentiation. Openzeppelin performs this strategy [here](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/76eee35971c2541585e05cbf258510dda7b2fbc6/contracts/token/ERC20/extensions/draft-IERC20Permit.sol#L59)",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "file-missing-natspec",
     "title": "File Missing Natspec",
-    "prompt": "It is important adding Natspec to every contract explaining their purpose and what they are intended to do."
+    "prompt": "It is important adding Natspec to every contract explaining their purpose and what they are intended to do.",
+    "path": ""
   },
   {
     "type": "qa",
     "label": "avoid-ecrecover-directly",
     "title": "Signatures recovered directly with `ecrecover()` can be malleable",
-    "prompt": "It is advisable to consider using a third party library that avoids any signature malleability scenario that may occur while recovering signatures directly with `ecrecover()` (such as OpenZeppelin's `ECDSA`)."
+    "prompt": "It is advisable to consider using a third party library that avoids any signature malleability scenario that may occur while recovering signatures directly with `ecrecover()` (such as OpenZeppelin's `ECDSA`).",
+    "path": ""
+  },
+  {
+    "type": "qa",
+    "label": "use-time-units",
+    "title": "Time based variables should use built-in time units",
+    "prompt": "The compiler provides [built-in time based units](https://docs.soliditylang.org/en/latest/units-and-global-variables.html#time-units) which values are expressed as seconds in the end. There are available suffixes like `seconds`, `minutes`, `hours`, `days` and `weeks` that could be used after literal numbers.",
+    "path": ""
+  },
+  {
+    "type": "qa",
+    "label": "long-line-of-code",
+    "title": "Long Lines of Code",
+    "prompt": "Some lines of code are too long. In favour of readability and a better experience while reading the code, it is advisable to determine a character limit per line of code in order to prevent users from right-left scrolling in order to read a full line. Currently, Github adds a lateral scroll bar at 164 chars.",
+    "path": ""
+  },
+  {
+    "type": "qa",
+    "label": "remove-hardhat-console",
+    "title": "Remove the import of `hardhat/console.sol`",
+    "prompt": "Currently the codebase has imports that are only used on development. Remove the mentioned import and any other import across not only contracts but also config files that should be used only on development.",
+    "path": ""
+  },
+  {
+    "type": "qa",
+    "label": "inconsistent-floating-pragma",
+    "title": "Inconsistent way of declaring the pragma version",
+    "prompt": "The codebase mixes the ways `pragma` version is declared. Commonly codebases declare the pragma version with `^` or strictly. It is advised to unify the criteria regarding this issue.",
+    "path": ""
+  },
+  {
+    "type": "qa",
+    "label": "missing-spdx",
+    "title": "Missing SPDX License Identifier",
+    "prompt": "It is a good practice to specify under which license is a contract deployed, and if no license is meant to be used the UNLICENSED identifier could be declared.",
+    "path": ""
+  },
+  {
+    "type": "qa",
+    "label": "modifier-instead-of-require",
+    "title": "Repeated `require` statements or gate controls could be refactored to a modifier",
+    "prompt": "Whenever the same checks are needed to be performed many times across the codebase, it is advised to refactor them as modifiers or even functions in favour of readability and performance of the code.",
+    "path": ""
   },
 
 
@@ -97,42 +217,63 @@
     "type": "low",
     "label": "transfer-lack-return-check",
     "title": "Lack of boolean return check on transfer or transferFrom",
-    "prompt": "There are some implementations of ERC20 tokens that do not revert if a transfer fails. Each transfer method has a boolean return that points to its success (or failure) and it is returned after a transfer is performed. If their return value is not checked a transfer may be failing silently having uncertain outcomes ranging from leaks of value to massive thefts. It is advisable wrapping each call to `transfer` and `transferFrom` with a `require` statement to enforce their truth."
+    "prompt": "There are some implementations of ERC20 tokens that do not revert if a transfer fails. Each transfer method has a boolean return that points to its success (or failure) and it is returned after a transfer is performed. If their return value is not checked a transfer may be failing silently having uncertain outcomes ranging from leaks of value to massive thefts. It is advisable wrapping each call to `transfer` and `transferFrom` with a `require` statement to enforce their truth.",
+    "path": ""
+  },
+  {
+    "type": "low",
+    "label": "require-instead-of-assert",
+    "title": "Avoid using `assert`, use `require` instead",
+    "prompt": "According to the [Solidity Doc about control structures](https://docs.soliditylang.org/en/v0.8.14/control-structures.html#panic-via-assert-and-error-via-require). The assert function creates an error of type `Panic(uint256)`. Assert should only be used to test for internal errors, and to check invariants. Properly functioning code should never create a Panic, not even on invalid external input. If this happens, then there is a bug in your contract which you should fix.",
+    "path": ""
+  },
+  {
+    "type": "low",
+    "label": "use-safe-transferfrom-nfts",
+    "title": "Avoid using `transferFrom()` for NFTs, use safe libraries instead",
+    "prompt": "The main difference between safe transfer libraries and transfers out-of-the-box from ERC standards are the reversals and how they are handled securely in the `safe` library. According to the [EIP-721](https://eips.ethereum.org/EIPS/eip-721): _'THE CALLER IS RESPONSIBLE TO CONFIRM THAT THE `_to` IS CAPABLE OF RECEIVING NFTS OR ELSE THEY MAY BE PERMANENTLY LOST'_. It is advised using a `safeTransfer` library while performing NFTs transfers.",
+    "path": ""
   },
   {
     "type": "low",
     "label": "open-todo",
     "title": "Open TODOs across the codebase",
-    "prompt": "Having open TODO comments across the codebase not only decrease its quality but also may show non implemented features which could provide a leak of possible attack vectors. It is advised to resolve every single TODO before deploying. For the record, any implementation or feature that may result from resolving an open TODO will be out of the scope of this audit and the plausible impacts that may derive from their implementations may require further audits to be determined."
+    "prompt": "Having open TODO comments across the codebase not only decrease its quality but also may show non implemented features which could provide a leak of possible attack vectors. It is advised to resolve every single TODO before deploying. For the record, any implementation or feature that may result from resolving an open TODO will be out of the scope of this audit and the plausible impacts that may derive from their implementations may require further audits to be determined.",
+    "path": ""
   },
   {
     "type": "low",
     "label": "revert-not-properly-bubbled",
     "title": "Reverts are not properly bubbled up if their length is shorter than 68",
-    "prompt": "While checking for revert strings strictly equal than zero, any errors which length is shorter than 68 won't be covered by the mentioned strict equality causing the code not to revert via the intended way. More about this issue can be seen on [this discussion](https://ethereum.stackexchange.com/questions/83528/how-can-i-get-the-revert-reason-of-a-call-in-solidity-so-that-i-can-use-it-in-th/83529#83529)."
+    "prompt": "While checking for revert strings strictly equal than zero, any errors which length is shorter than 68 won't be covered by the mentioned strict equality causing the code not to revert via the intended way. More about this issue can be seen on [this discussion](https://ethereum.stackexchange.com/questions/83528/how-can-i-get-the-revert-reason-of-a-call-in-solidity-so-that-i-can-use-it-in-th/83529#83529).",
+    "path": ""
   },
   {
     "type": "low",
     "label": "unused-receive-fallbacks",
     "title": "Empty or Unused `receive` or `fallback` function",
-    "prompt": "If the mentioned functions are meant to be used they should implement a logic inside them or the contract itself should show a clear usage and dependance of them. If the contract is not intended to handle value they should revert or even not be implemented."
+    "prompt": "If the mentioned functions are meant to be used they should implement a logic inside them or the contract itself should show a clear usage and dependance of them. If the contract is not intended to handle value they should revert or even not be implemented.",
+    "path": ""
   },
   {
     "type": "low",
     "label": "missing-zero-address-check",
     "title": "No Zero Address checks performed when assigning address values",
-    "prompt": "It is debatable if it is really needed to check that an address is not the `address(0)` while setting values for state variables. Based on past attacks or leaks that where done because of a lack of checks while setting up address values, it is advised to perform a zero address check on the following cases: "
+    "prompt": "It is debatable if it is really needed to check that an address is not the `address(0)` while setting values for state variables. Based on past attacks or leaks that where done because of a lack of checks while setting up address values, it is advised to perform a zero address check on the following cases:",
+    "path": ""
   },
   {
     "type": "low",
     "label": "insufficient-protection-sensitive-data",
     "title": "Insufficient protection of sensitive data",
-    "prompt": "The `hardhat.config.ts` uses sensitive information imported from an un-committed environment file. The usage of either `.env` imported variables or even plain pasted keys make it easier for an attacker to compromise the keys used for monitoring, deployment, testing and even if wallet private keys are used in such way funds can be compromised. The following data could be compromised if a leak happens or if the `.gitignore` file is mistakenly deleted according to the imports performed on `hardhat.config.ts`: "
+    "prompt": "The `hardhat.config.ts` uses sensitive information imported from an un-committed environment file. The usage of either `.env` imported variables or even plain pasted keys make it easier for an attacker to compromise the keys used for monitoring, deployment, testing and even if wallet private keys are used in such way funds can be compromised. The following data could be compromised if a leak happens or if the `.gitignore` file is mistakenly deleted according to the imports performed on `hardhat.config.ts`: ",
+    "path": ""
   },
   {
     "type": "low",
     "label": "avoid-abiencodepacked",
     "title": "Using abi.encodePacked before hashing for dynamic values can lead to hash collisions",
-    "prompt": "The mentioned function concatenates directly types that are shorter than 32 bytes without padding or sign extending the value. For further information, the following link of the [official doc](https://docs.soliditylang.org/en/v0.8.13/abi-spec.html#non-standard-packed-mode) can be checked. Essentially, it is recommended using `abi.encode()` instead of `encodePacked()` because the first one pads the values across `32 bytes`.  According to the cited link: >If you use `keccak256(abi.encodePacked(a, b))` and both a and b are dynamic types, it is easy to craft collisions in the hash value by moving parts of a into b and vice-versa. More specifically, `abi.encodePacked(\"a\", \"bc\") == abi.encodePacked(\"ab\", \"c\")`. If you use abi.encodePacked for signatures, authentication or data integrity, make sure to always use the same types and check that at most one of them is dynamic. Unless there is a compelling reason, abi.encode should be preferred."
+    "prompt": "The mentioned function concatenates directly types that are shorter than 32 bytes without padding or sign extending the value. For further information, the following link of the [official doc](https://docs.soliditylang.org/en/v0.8.13/abi-spec.html#non-standard-packed-mode) can be checked. Essentially, it is recommended using `abi.encode()` instead of `encodePacked()` because the first one pads the values across `32 bytes`.  According to the cited link: >If you use `keccak256(abi.encodePacked(a, b))` and both a and b are dynamic types, it is easy to craft collisions in the hash value by moving parts of a into b and vice-versa. More specifically, `abi.encodePacked(\"a\", \"bc\") == abi.encodePacked(\"ab\", \"c\")`. If you use abi.encodePacked for signatures, authentication or data integrity, make sure to always use the same types and check that at most one of them is dynamic. Unless there is a compelling reason, abi.encode should be preferred.",
+    "path": ""
   }
 ]
