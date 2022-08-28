@@ -10,8 +10,7 @@
 Total: 7 appearances over 4 issues. 
 
 
- <h2>Non-critical Risk Issues</h2> 
-<br><h3>[N-1] Repeated `require` statements or gate controls could be refactored to a modifier</h3> 
+ <h2>Non-critical Risk Issues</h2><br><h3>[N-1] Repeated `require` statements or gate controls could be refactored to a modifier</h3> 
 Whenever the same checks are needed to be performed many times across the codebase, it is advised to refactor them as modifiers or even functions in favour of readability and performance of the code.<br><br><em>Found 4 times</em>
 
 ```solidity
