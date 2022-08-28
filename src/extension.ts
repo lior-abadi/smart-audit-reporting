@@ -9,14 +9,17 @@ import { markdownTable } from "./markdownTable/markdownTable";
 import * as sampleDatabase from "./SAR.json";
 
 // =============== TYPES DECLARATIONS ===============
+
 // A SAR database with findings
-type FindingDatabase = {
+type singleFinding = {
   type: string;
   label: string;
   title: string;
   prompt: string;
   path: string;
-}[];
+};
+
+type FindingDatabase = singleFinding[];
 
 // An appearance of a finding
 type Appearance = {
@@ -203,7 +206,7 @@ function formatFindings(finding: Finding, id: number): string {
   let findingTitle: string =
     `<h3> [${finding.type.toUpperCase()}-${id}]` +
     " " +
-    `${finding.title}`+
+    `${finding.title}` +
     " </h3> \n";
   let findingContent: string = `${finding.prompt}<br><br>`;
   let timesFound: string = "";
@@ -249,11 +252,7 @@ function formatFindings(finding: Finding, id: number): string {
     packedAppearances = packedAppearances + singleFileLoc;
   }
   return (
-    findingTitle +
-    findingContent +
-    timesFound +
-    packedAppearances +
-    "<br>"
+    findingTitle + findingContent + timesFound + packedAppearances + "<br>"
   );
 }
 
@@ -272,7 +271,7 @@ function generateReport(findingMapping: FindingMapping) {
   for (let singleKey of arrayOfKeys) {
     let currentFinding: Finding = findingMapping.get(singleKey)!;
 
-    if (currentSeverity === undefined){
+    if (currentSeverity === undefined) {
       currentSeverity = currentFinding.type
         .toLowerCase()
         .charAt(0)
@@ -291,7 +290,7 @@ function generateReport(findingMapping: FindingMapping) {
       currentFinding.title,
       `${currentFinding.appearances.length}`,
     ]);
-    instancesCount = instancesCount + currentFinding.appearances.length
+    instancesCount = instancesCount + currentFinding.appearances.length;
     id += 1;
   }
 
@@ -299,15 +298,24 @@ function generateReport(findingMapping: FindingMapping) {
     align: ["c", "l", "c"],
   });
 
-  let issueText: string = ""
-  currentSeverity == "G" ? (issueText = "Optimizations") : (issueText = "Risk Issues");
-  if(currentSeverity === "404") currentSeverity = "Not Found"
-  if(currentSeverity === "G") currentSeverity = "Gas";
-  if(currentSeverity === "N") currentSeverity = "Non-critical";
-  if(currentSeverity === "L") currentSeverity = "Low";
-  let titleAndTable: string = `<h3>${currentSeverity} ${issueText}</h3> \n\n` + summaryTable + `\n\n` + `Total: ${instancesCount} appearances over ${id-1} issues. \n`
+  let issueText: string = "";
+  currentSeverity == "G"
+    ? (issueText = "Optimizations")
+    : (issueText = "Risk Issues");
+  if (currentSeverity === "404") currentSeverity = "Not Found";
+  if (currentSeverity === "G") currentSeverity = "Gas";
+  if (currentSeverity === "N") currentSeverity = "Non-critical";
+  if (currentSeverity === "L") currentSeverity = "Low";
+  let titleAndTable: string =
+    `<h3>${currentSeverity} ${issueText}</h3> \n\n` +
+    summaryTable +
+    `\n\n` +
+    `<em>Total: ${instancesCount} appearances over ${id - 1} issues.</em> \n`;
 
-  let reportWithContentAndTable: string = titleAndTable + `\n\n <h2>${currentSeverity} ${issueText}</h2> \n`+ reportString
+  let reportWithContentAndTable: string =
+    titleAndTable +
+    `\n\n <h2>${currentSeverity} ${issueText}</h2> \n` +
+    reportString;
 
   createReportFile(findingMapping, reportWithContentAndTable);
 }
@@ -360,9 +368,53 @@ function str2arrayBuffer(text: string): Uint8Array {
   return new TextEncoder().encode(text);
 }
 
+// Format each finding name and generates a table (used for createFindingsIndex)
+function formatFindingIndex(filteredFindings: FindingDatabase): string {
+  let tableArray: string[][] = [];
+  tableArray.push(["Label", "Title"]);
+
+  for (let finding of filteredFindings) {
+    tableArray.push([finding.label, finding.title]);
+  }
+
+  return markdownTable(tableArray, {
+    align: ["c", "l"],
+  });
+}
+
+// Saves the finding index within the SAR folder
+function saveFindingIndex(findings: FindingDatabase[]) {
+  let indexTables: string[] = [];
+  for (let filteredFinding of findings) {
+    indexTables.push(formatFindingIndex(filteredFinding));
+  }
+
+  let rawText: string =
+    `<h2>Gas Optimizations</h2> \n\n` +
+    indexTables[0] +
+    `\n\n\n` +
+    `<h2>Non Critical Issues</h2> \n\n` +
+    indexTables[1] + 
+    `\n\n\n` +
+    `<h2>Low Risk Issues</h2> \n\n` +
+    indexTables[2] + 
+    `\n\n\n`;
+  
+  if (vscode.workspace.workspaceFolders !== undefined) {
+    let f = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    let indexUri: vscode.Uri = vscode.Uri.parse(
+      `${f}/SAR/00-FindingIndex.md`
+    );
+
+    // Create the buffer from the reportString.
+    vscode.workspace.fs.writeFile(indexUri, str2arrayBuffer(rawText));
+  }
+}
+
 // ======================= EXTENSION ========================
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
+    // Generates a general report of findings
     vscode.commands.registerCommand("vsSAR.generateGeneralReport", async () => {
       vscode.window.showInformationMessage(
         `SAReporting: Generating general report`
@@ -507,8 +559,9 @@ export function activate(context: vscode.ExtensionContext) {
       for (let findingMapping of allFindings) {
         generateReport(findingMapping);
       }
-
-      for (let findingMapping of allFindings) console.log(findingMapping);
+      vscode.window.showInformationMessage(
+        `SAReporting: Reports were successfully generated`
+      );
     }),
 
     vscode.commands.registerCommand(
@@ -516,7 +569,40 @@ export function activate(context: vscode.ExtensionContext) {
       async () => {
         generateRootFolder(sampleDatabase);
       }
-    )
+    ),
+
+    vscode.commands.registerCommand("vsSAR.createFindingsIndex", async () => {
+      vscode.window.showInformationMessage(
+        `SAReporting: Generating finding index`
+      );
+      let sarDatabase: FindingDatabase | undefined = await getDatabase();
+      if (sarDatabase === undefined) return;
+
+      let gasFindings: FindingDatabase;
+      let ncFindings: FindingDatabase;
+      let lowFindings: FindingDatabase;
+      let filtered: FindingDatabase[] = [];
+
+      gasFindings = sarDatabase.filter(
+        (finding) => finding.type.toUpperCase() === "GAS"
+      );
+      ncFindings = sarDatabase.filter(
+        (finding) => finding.type.toUpperCase() === "N"
+      );
+      lowFindings = sarDatabase.filter(
+        (finding) => finding.type.toUpperCase() === "LOW"
+      );
+
+      filtered.push(gasFindings);
+      filtered.push(ncFindings);
+      filtered.push(lowFindings);
+
+      saveFindingIndex(filtered);
+      vscode.window.showInformationMessage(
+        `SAReporting: Finding Index generated`
+      );
+
+    })
   );
 }
 

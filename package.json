@@ -11,7 +11,8 @@
   ],
   "activationEvents": [
     "onCommand:vsSAR.generateGeneralReport",
-    "onCommand:vsSAR.createSampleFindingDatabase"
+    "onCommand:vsSAR.createSampleFindingDatabase",
+    "onCommand:vsSAR.createFindingsIndex"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -23,7 +24,12 @@
       },
       {
         "command": "vsSAR.createSampleFindingDatabase",
-        "title": "Create Sample Finding Database",
+        "title": "Create Sample Finding Database & Directory",
+        "category": "SAReporting"
+      },
+      {
+        "command": "vsSAR.createFindingsIndex",
+        "title": "Generate an Index of Findings",
         "category": "SAReporting"
       }
     ]
