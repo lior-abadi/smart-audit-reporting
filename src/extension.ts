@@ -204,7 +204,7 @@ function formatFindings(finding: Finding, id: number): string {
     `<h3> [${finding.type.toUpperCase()}-${id}]` +
     " " +
     `${finding.title}`+
-    " </h3> \n <br>";
+    " </h3> \n";
   let findingContent: string = `${finding.prompt}<br><br>`;
   let timesFound: string = "";
   let numberOfInstances: number = finding.appearances.length;
@@ -249,7 +249,6 @@ function formatFindings(finding: Finding, id: number): string {
     packedAppearances = packedAppearances + singleFileLoc;
   }
   return (
-    "<br>" + 
     findingTitle +
     findingContent +
     timesFound +
