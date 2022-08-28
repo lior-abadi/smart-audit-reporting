@@ -3,6 +3,7 @@ import { Marked } from "@ts-stack/markdown";
 import * as vscode from "vscode";
 import * as localfs from "fs/promises";
 import path = require("path");
+import { markdownTable } from "./markdownTable/markdownTable";
 
 // Base template of findings that will be injected into the project directory.
 import * as sampleDatabase from "./SAR.json";
@@ -162,7 +163,7 @@ async function generateRootFolder(db: FindingDatabase) {
     }
 
     // Inject each markdown finding file to the root (EXPERIMENTAL)
-    // await getFindingContentFromDatabase(foldersUri[1]); 
+    // await getFindingContentFromDatabase(foldersUri[1]);
   } else {
     let message: string =
       "Unable to resolve root directory. Create the findings file manually.";
@@ -200,16 +201,17 @@ async function getFindingContentFromDatabase(targetUri: vscode.Uri) {
 // Generates the markdown format for each finding processing file duplicates
 function formatFindings(finding: Finding, id: number): string {
   let findingTitle: string =
-    `<h3>${finding.type.toUpperCase()}-${id}` +
+    `<h3>[${finding.type.toUpperCase()}-${id}]` +
     " " +
     finding.title +
     "</h3> \n";
   let findingContent: string = `${finding.prompt}<br><br>`;
   let timesFound: string = "";
-  if (finding.appearances.length === 1) {
-    timesFound = `<em>Found ${finding.appearances.length} time</em>\n\n`;
+  let numberOfInstances: number = finding.appearances.length;
+  if (numberOfInstances === 1) {
+    timesFound = `<em>Found ${numberOfInstances} time</em>\n\n`;
   } else {
-    timesFound = `<em>Found ${finding.appearances.length} times</em>\n\n`;
+    timesFound = `<em>Found ${numberOfInstances} times</em>\n\n`;
   }
 
   let packedAppearances: string = "";
@@ -241,7 +243,7 @@ function formatFindings(finding: Finding, id: number): string {
           singleFileLoc = singleFileLoc + cacheFormatting;
         }
 
-        singleFileLoc = "```solidity\n" + singleFileLoc + "```\n\n";
+        singleFileLoc = "```solidity\n" + singleFileLoc + "```\n";
       }
     }
     packedAppearances = packedAppearances + singleFileLoc;
@@ -251,8 +253,7 @@ function formatFindings(finding: Finding, id: number): string {
     findingTitle +
     findingContent +
     timesFound +
-    packedAppearances +
-    "<br>"
+    packedAppearances
   );
 }
 
@@ -262,17 +263,56 @@ function generateReport(findingMapping: FindingMapping) {
   let arrayOfKeys: string[] = Array.from(findingMapping.keys());
   let id: number = 1;
   let reportString: string = "";
+  let tableArray: string[][] = [];
+  let currentSeverity: string | undefined;
+  let instancesCount: number = 0;
+
+  tableArray.push([" ", "Title", "N° of Appearances"]);
 
   for (let singleKey of arrayOfKeys) {
-    reportString =
-      reportString + formatFindings(findingMapping.get(singleKey)!, id);
+    let currentFinding: Finding = findingMapping.get(singleKey)!;
+
+    if (currentSeverity === undefined){
+      currentSeverity = currentFinding.type
+        .toLowerCase()
+        .charAt(0)
+        .toUpperCase();
+    }
+
+    // Capturing the whole finding
+    let formattedFinding: string = formatFindings(currentFinding, id);
+
+    // Appending them to the report
+    reportString = reportString + formattedFinding;
+
+    // Capturing the table rows
+    tableArray.push([
+      `[${currentFinding.type.toUpperCase()}-${id}]`,
+      currentFinding.title,
+      `${currentFinding.appearances.length}`,
+    ]);
+    instancesCount = instancesCount + currentFinding.appearances.length
     id += 1;
   }
-  // console.log(reportString);
-  createReportFile(findingMapping, reportString);
+
+  let summaryTable: string = markdownTable(tableArray, {
+    align: ["c", "l", "c"],
+  });
+
+  let issueText: string = ""
+  currentSeverity == "G" ? (issueText = "Optimizations") : (issueText = "Risk Issues");
+  if(currentSeverity === "404") currentSeverity = "Not Found"
+  if(currentSeverity === "G") currentSeverity = "Gas";
+  if(currentSeverity === "N") currentSeverity = "Non-critical";
+  if(currentSeverity === "L") currentSeverity = "Low";
+  let titleAndTable: string = `<h3>${currentSeverity} ${issueText}</h3> \n\n` + summaryTable + `\n\n` + `Total: ${instancesCount} appearances over ${id-1} issues. \n`
+
+  let reportWithContentAndTable: string = titleAndTable + `\n\n <h2>${currentSeverity} ${issueText}</h2> \n`+ reportString
+
+  createReportFile(findingMapping, reportWithContentAndTable);
 }
 
-// Gathers the formatted findings and generates a report per severity
+// Gathers the formatted reports and saves their markdown files.
 function createReportFile(
   findingMapping: FindingMapping,
   reportString: string
