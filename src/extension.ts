@@ -249,7 +249,6 @@ function formatFindings(finding: Finding, id: number): string {
     packedAppearances = packedAppearances + singleFileLoc;
   }
   return (
-    "<br>" +
     findingTitle +
     findingContent +
     timesFound +
@@ -307,7 +306,7 @@ function generateReport(findingMapping: FindingMapping) {
   if(currentSeverity === "L") currentSeverity = "Low";
   let titleAndTable: string = `<h3>${currentSeverity} ${issueText}</h3> \n\n` + summaryTable + `\n\n` + `Total: ${instancesCount} appearances over ${id-1} issues. \n`
 
-  let reportWithContentAndTable: string = titleAndTable + `\n\n <h2>${currentSeverity} ${issueText}</h2>`+ reportString
+  let reportWithContentAndTable: string = titleAndTable + `\n\n <h2>${currentSeverity} ${issueText}</h2> \n`+ reportString
 
   createReportFile(findingMapping, reportWithContentAndTable);
 }
