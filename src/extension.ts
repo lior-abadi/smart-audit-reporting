@@ -161,8 +161,8 @@ async function generateRootFolder(db: FindingDatabase) {
       );
     }
 
-    // Inject each markdown finding file to the root
-    await getFindingContentFromDatabase(foldersUri[1]);
+    // Inject each markdown finding file to the root (EXPERIMENTAL)
+    // await getFindingContentFromDatabase(foldersUri[1]); 
   } else {
     let message: string =
       "Unable to resolve root directory. Create the findings file manually.";
@@ -170,6 +170,7 @@ async function generateRootFolder(db: FindingDatabase) {
   }
 }
 
+// Injects .md files of findings into the directory (preliminary feature)
 async function getFindingContentFromDatabase(targetUri: vscode.Uri) {
   let markdownContent = await localfs.readdir(
     path.resolve(__dirname, "SARFindings"),
@@ -196,6 +197,7 @@ async function getFindingContentFromDatabase(targetUri: vscode.Uri) {
   }
 }
 
+// Generates the markdown format for each finding processing file duplicates
 function formatFindings(finding: Finding, id: number): string {
   let findingTitle: string =
     `<h3>${finding.type.toUpperCase()}-${id}` +
@@ -211,21 +213,41 @@ function formatFindings(finding: Finding, id: number): string {
   }
 
   let packedAppearances: string = "";
+  let alreadyAppeared: string[] = [];
 
   for (let singleAppearance of finding.appearances) {
-    let cacheAppearance: string =
-      "```solidity\n" +
-      singleAppearance.contractFile +
-      "   L" +
-      singleAppearance.loc +
-      ":       " +
-      singleAppearance.content +
-      "\n" +
-      "```\n\n";
-    packedAppearances = packedAppearances + cacheAppearance;
+    let onTheSameFile: Appearance[];
+    let singleFileLoc: string = "";
+    if (singleAppearance.contractFile !== undefined) {
+      if (
+        alreadyAppeared.find(
+          (item) => item === singleAppearance.contractFile
+        ) === undefined
+      ) {
+        onTheSameFile = finding.appearances.filter(
+          (item) => item.contractFile === singleAppearance.contractFile
+        );
+        alreadyAppeared.push(singleAppearance.contractFile);
+
+        for (let sameFileSingle of onTheSameFile) {
+          let cacheFormatting: string =
+            sameFileSingle.contractFile +
+            "   L" +
+            sameFileSingle.loc +
+            ":       " +
+            sameFileSingle.content +
+            "\n";
+
+          singleFileLoc = singleFileLoc + cacheFormatting;
+        }
+
+        singleFileLoc = "```solidity\n" + singleFileLoc + "```\n\n";
+      }
+    }
+    packedAppearances = packedAppearances + singleFileLoc;
   }
   return (
-    "<br>" + 
+    "<br>" +
     findingTitle +
     findingContent +
     timesFound +
@@ -250,6 +272,7 @@ function generateReport(findingMapping: FindingMapping) {
   createReportFile(findingMapping, reportString);
 }
 
+// Gathers the formatted findings and generates a report per severity
 function createReportFile(
   findingMapping: FindingMapping,
   reportString: string
