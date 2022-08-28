@@ -197,32 +197,40 @@ async function getFindingContentFromDatabase(targetUri: vscode.Uri) {
 }
 
 function formatFindings(finding: Finding, id: number): string {
-  let blankLine: string = "<br> "
   let findingTitle: string =
-    `<h3>${finding.type.toUpperCase()}-${id}` + " " + finding.title + "</h3><br>";
+    `<h3>${finding.type.toUpperCase()}-${id}` +
+    " " +
+    finding.title +
+    "</h3> \n";
   let findingContent: string = `${finding.prompt}<br><br>`;
   let timesFound: string = "";
-  if (finding.appearances.length === 1){
-    timesFound = `<em>Found ${finding.appearances.length} time</em><br><br>`;
-  } else{
-    timesFound = `<em>Found ${finding.appearances.length} times</em><br><br>`;
+  if (finding.appearances.length === 1) {
+    timesFound = `<em>Found ${finding.appearances.length} time</em>\n\n`;
+  } else {
+    timesFound = `<em>Found ${finding.appearances.length} times</em>\n\n`;
   }
-  
+
   let packedAppearances: string = "";
 
   for (let singleAppearance of finding.appearances) {
     let cacheAppearance: string =
-      "```" +
+      "```solidity\n" +
       singleAppearance.contractFile +
       "   L" +
       singleAppearance.loc +
       ":       " +
       singleAppearance.content +
-      "``` <br>";
+      "\n" +
+      "```\n\n";
     packedAppearances = packedAppearances + cacheAppearance;
   }
   return (
-    blankLine + findingTitle + findingContent + timesFound + packedAppearances + "<br>"
+    "<br>" + 
+    findingTitle +
+    findingContent +
+    timesFound +
+    packedAppearances +
+    "<br>"
   );
 }
 
