@@ -1,5 +1,4 @@
 import { TextEncoder } from "util";
-import { Marked } from "@ts-stack/markdown";
 import * as vscode from "vscode";
 import * as localfs from "fs/promises";
 import path = require("path");
@@ -568,46 +567,46 @@ export function activate(context: vscode.ExtensionContext) {
       );
     }),
 
+    // Generates a root folder along with a database sample
     vscode.commands.registerCommand(
       "vsSAR.createSampleFindingDatabase",
       async () => {
         generateRootFolder(sampleDatabase);
       }
     ),
-
+    
+    // Generates an index of the findings available within the database
     vscode.commands.registerCommand("vsSAR.createFindingsIndex", async () => {
       vscode.window.showInformationMessage(
         `SAReporting: Generating finding index`
       );
       let sarDatabase: FindingDatabase | undefined = await getDatabase();
       if (sarDatabase === undefined) return;
-
-      let gasFindings: FindingDatabase;
-      let ncFindings: FindingDatabase;
-      let lowFindings: FindingDatabase;
       let filtered: FindingDatabase[] = [];
 
-      gasFindings = sarDatabase
-        .filter((finding) => finding.type.toUpperCase() === "GAS")
-        .sort(function (a, b) {
-          return bubbleSorting(a, b);
-        });
+      filtered.push(
+        sarDatabase
+          .filter((finding) => finding.type.toUpperCase() === "GAS")
+          .sort(function (a, b) {
+            return bubbleSorting(a, b);
+          })
+      );
 
-      ncFindings = sarDatabase
-        .filter((finding) => finding.type.toUpperCase() === "N")
-        .sort(function (a, b) {
-          return bubbleSorting(a, b);
-        });
+      filtered.push(
+        sarDatabase
+          .filter((finding) => finding.type.toUpperCase() === "N")
+          .sort(function (a, b) {
+            return bubbleSorting(a, b);
+          })
+      );
 
-      lowFindings = sarDatabase
-        .filter((finding) => finding.type.toUpperCase() === "LOW")
-        .sort(function (a, b) {
-          return bubbleSorting(a, b);
-        });
-
-      filtered.push(gasFindings);
-      filtered.push(ncFindings);
-      filtered.push(lowFindings);
+      filtered.push(
+        sarDatabase
+          .filter((finding) => finding.type.toUpperCase() === "LOW")
+          .sort(function (a, b) {
+            return bubbleSorting(a, b);
+          })
+      );
 
       saveFindingIndex(filtered);
       vscode.window.showInformationMessage(
