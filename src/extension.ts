@@ -201,10 +201,10 @@ async function getFindingContentFromDatabase(targetUri: vscode.Uri) {
 // Generates the markdown format for each finding processing file duplicates
 function formatFindings(finding: Finding, id: number): string {
   let findingTitle: string =
-    `<h3>[${finding.type.toUpperCase()}-${id}]` +
+    `<h3> [${finding.type.toUpperCase()}-${id}]` +
     " " +
-    finding.title +
-    "</h3> \n";
+    `${finding.title}`+
+    " </h3> \n <br>";
   let findingContent: string = `${finding.prompt}<br><br>`;
   let timesFound: string = "";
   let numberOfInstances: number = finding.appearances.length;
