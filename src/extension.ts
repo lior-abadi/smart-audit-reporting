@@ -249,10 +249,12 @@ function formatFindings(finding: Finding, id: number): string {
     packedAppearances = packedAppearances + singleFileLoc;
   }
   return (
+    "<br>" + 
     findingTitle +
     findingContent +
     timesFound +
-    packedAppearances
+    packedAppearances +
+    "<br>"
   );
 }
 
