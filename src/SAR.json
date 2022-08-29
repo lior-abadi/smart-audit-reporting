@@ -44,6 +44,13 @@
   }, 
   {
     "type": "gas",
+    "label": "uncapped-manipulable-string",
+    "title": "Users can manipulate string chain size",
+    "prompt": "Users can freely use string chains with uncapped size. When the <code>32 bytes</code> slot size is exceeded, a new slow will be used to render and store that string. In order to provide a better user experience, it is advisable to constraint the user-input string size.",
+    "path": ""
+  },
+  {
+    "type": "gas",
     "label": "constructed-variables-should-be-immutable",
     "title": "Variables set only while constructing should be <code>immutable</code>",
     "prompt": "This operation reduces the gas cost each time a variable is consulted and also avoids a Gsset (20,000 gas) while constructing. ",
@@ -126,6 +133,13 @@
     "label": "indexed-events",
     "title": "No indexed parameters while emitting events",
     "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event.",
+    "path": ""
+  },
+  {
+    "type": "n",
+    "label": "centralized-logic",
+    "title": "The allowed role has too much power over some actions",
+    "prompt": "There are some functions that have considerable impact within the community that compromise de decentralization of the protocol and deposit too much trust on the approved caller of that function. In order to build trustless protocols, there should not be a role holding too much power or whose decisions have breaking impact on the community.",
     "path": ""
   },
   {
