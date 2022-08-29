@@ -1,43 +1,47 @@
-<h3>Non-critical Risk Issues</h3> 
+<h3>Gas Optimizations</h3> 
 
-|       | Title                                                                                       | N° of Appearances |
-| :---: | :------------------------------------------------------------------------------------------ | :---------------: |
-| [N-1] | Repeated <code>require</code> statements or gate controls could be refactored to a modifier |         4         |
-| [N-2] | Time based variables should use built-in time units                                         |         1         |
-| [N-3] | Use scientific notation (1e8) instead of exponential notation (1 * 10**8)                   |         1         |
-| [N-4] | Capped variable names should be reserved for constant or immutable variables                |         1         |
+|       | Title                                                                            | N° of Appearances |
+| :---: | :------------------------------------------------------------------------------- | :---------------: |
+| [G-1] | Constants that are <code>private</code> instead of <code>public</code> save gas. |         7         |
+| [G-2] | Variables set only while constructing should be <code>immutable</code>           |         2         |
+| [G-3] | Multiple mappings could be combined                                              |         8         |
 
-Total: 7 appearances over 4 issues. 
+<em>Total: 17 appearances over 3 issues.</em> 
 
 
- <h2>Non-critical Risk Issues</h2> 
-<h3> [N-1] Repeated <code>require</code> statements or gate controls could be refactored to a modifier </h3> 
-Whenever the same checks are needed to be performed many times across the codebase, it is advised to refactor them as modifiers or even functions in favour of readability and performance of the code.<br><br><em>Found 4 times</em>
+ <h2>Gas Optimizations</h2> 
+<h3> [G-1] Constants that are <code>private</code> instead of <code>public</code> save gas. </h3> 
+Because constant variables should be declared an initialized as a one-liner, their value could be easily retrieved by reading directly the source code. Removing the <code>public</code> modifier and using <code>private</code> instead, does not create a function getter for the public constant saving around <code>3500 gas</code> on deployment.<br><br><em>Found 7 times</em>
 
 ```solidity
-Emitter.sol   L33:       Payment prePayment,
-Emitter.sol   L34:       bool isERC721,
+RANGE.sol   L65:       uint256 public constant FACTOR_SCALE = 1e4;
 ```
 ```solidity
-GolomTrader.sol   L9:       function transferFrom(
-GolomTrader.sol   L12:       uint256 tokenId
+Governance.sol   L121:       uint256 public constant SUBMISSION_REQUIREMENT = 100;
+Governance.sol   L124:       uint256 public constant ACTIVATION_DEADLINE = 2 weeks;
+Governance.sol   L127:       uint256 public constant GRACE_PERIOD = 1 weeks;
+Governance.sol   L130:       uint256 public constant ENDORSEMENT_THRESHOLD = 20;
+Governance.sol   L133:       uint256 public constant EXECUTION_THRESHOLD = 33;
+Governance.sol   L137:       uint256 public constant EXECUTION_TIMELOCK = 3 days;
 ```
-<br><h3> [N-2] Time based variables should use built-in time units </h3> 
-The compiler provides [built-in time based units](https://docs.soliditylang.org/en/latest/units-and-global-variables.html#time-units) which values are expressed as seconds in the end. There are available suffixes like <code>seconds</code>, <code>minutes</code>, <code>hours</code>, <code>days</code> and <code>weeks</code> that could be used after literal numbers.<br><br><em>Found 1 time</em>
+<br><h3> [G-2] Variables set only while constructing should be <code>immutable</code> </h3> 
+This operation reduces the gas cost each time a variable is consulted and also avoids a Gsset (20,000 gas) while constructing. <br><br><em>Found 2 times</em>
 
 ```solidity
-Emitter.sol   L36:       uint256 refererrAmt,
+BondCallback.sol   L43:       aggregator = aggregator_;
+BondCallback.sol   L44:       ohm = ohm_;
 ```
-<br><h3> [N-3] Use scientific notation (1e8) instead of exponential notation (1 * 10**8) </h3> 
-For large numbers it is more readable and understandable the scientific notation rather than the exponentiation (which essentially can be mistakenly interpreted as multiplication by a glance).<br><br><em>Found 1 time</em>
+<br><h3> [G-3] Multiple mappings could be combined </h3> 
+If there are used mappings with repeated types of keys, it is a sign that they could be refactored into a single mapping that points to a struct when appropriate. Depending on the data types and their sizes, this could avoid triggering a Gsset operation (consumes 20,000 gas while changing from zero to a non zero value). Because memory slots are calculated via <code>keccak256</code>, reducing the amount of slots also reduce for the compiler the need to compute the keys' hash.<br><br><em>Found 8 times</em>
 
 ```solidity
-Emitter.sol   L40:       uint256 deadline,
-```
-<br><h3> [N-4] Capped variable names should be reserved for constant or immutable variables </h3> 
-For the scenarios where the variable name should differ depending its origin, a pure or view function could be used instead to make this differentiation. Openzeppelin performs this strategy [here](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/76eee35971c2541585e05cbf258510dda7b2fbc6/contracts/token/ERC20/extensions/draft-IERC20Permit.sol#L59)<br><br><em>Found 1 time</em>
-
-```solidity
-Emitter.sol   L41:       Signature sig
+Governance.sol   L96:       mapping(uint256 => ProposalMetadata) public getProposalMetadata;
+Governance.sol   L99:       mapping(uint256 => uint256) public totalEndorsementsForProposal;
+Governance.sol   L102:       mapping(uint256 => mapping(address => uint256)) public userEndorsementsForProposal;
+Governance.sol   L105:       mapping(uint256 => bool) public proposalHasBeenActivated;
+Governance.sol   L108:       mapping(uint256 => uint256) public yesVotesForProposal;
+Governance.sol   L111:       mapping(uint256 => uint256) public noVotesForProposal;
+Governance.sol   L114:       mapping(uint256 => mapping(address => uint256)) public userVotesForProposal;
+Governance.sol   L117:       mapping(uint256 => mapping(address => bool)) public tokenClaimsForProposal;
 ```
 <br>

@@ -214,15 +214,15 @@
   },
   {
     "type": "n",
-    "label": "remove-hardhat-console",
-    "title": "Remove the import of <code>hardhat/console.sol</code>",
-    "prompt": "Currently the codebase has imports that are only used on development. Remove the mentioned import and any other import across not only contracts but also config files that should be used only on development.",
+    "label": "wrong-token-name",
+    "title": "Change token name on deployment",
+    "prompt": "The following lines contain a token deployment with a name that appears to be used only for testing. If this token will be deployed on production, review its name.",
     "path": ""
   },
   {
     "type": "n",
-    "label": "iscontract-usage",
-    "title": "Usage of isContract or s</code>",
+    "label": "remove-hardhat-console",
+    "title": "Remove the import of <code>hardhat/console.sol</code>",
     "prompt": "Currently the codebase has imports that are only used on development. Remove the mentioned import and any other import across not only contracts but also config files that should be used only on development.",
     "path": ""
   },
@@ -238,6 +238,13 @@
     "label": "missing-spdx",
     "title": "Missing SPDX License Identifier",
     "prompt": "It is a good practice to specify under which license is a contract deployed, and if no license is meant to be used the UNLICENSED identifier could be declared.",
+    "path": ""
+  },
+  {
+    "type": "n",
+    "label": "function-missing-natspec",
+    "title": "Function or public variable with missing or incomplete natspec",
+    "prompt": "Providing a complete, clear and understandable natspec on each function and public variable is a good practice that helps other devs and non-devs to understand quicker and better what is a function or variable intending to do/return. With functions, explain their intended behavior, returns and input parameters when applies. For public variables, what do they mean. The following instance(s) have incomplete or missing natspec.",
     "path": ""
   },
   {
