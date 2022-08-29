@@ -105,6 +105,13 @@
     "prompt": "For unsigned integers, it is cheaper to check that they are non zero values with the unequal operator rather than checking their greatness. While compiling with the optimizer enabled this change saves around <code>6 gas</code>.",
     "path": ""
   },
+  {
+    "type": "gas",
+    "label": "shift-dont-divide-by-two",
+    "title": "Bit shifting is cheaper than dividing by two",
+    "prompt": "Dividing by two (<code>X / 2</code>) is the same as single bit right shifting (<code>X >> 1</code>). This is because the division consumes 20 more gas while performing the <code>JUMPs</code> that are not performed while bit shifting.",
+    "path": ""
+  },
 
 
   {
@@ -240,6 +247,13 @@
     "prompt": "Whenever the same checks are needed to be performed many times across the codebase, it is advised to refactor them as modifiers or even functions in favour of readability and performance of the code.",
     "path": ""
   },
+  {
+    "type": "n",
+    "label": "iscontract-usage",
+    "title": "Usage of <code>isContract</code> or similar",
+    "prompt": "It is an already known behavior that calls coming from the constructor while deploying a contract will appear to come as if they were coming from an EOA because the <code>codesize</code> is injected later on construction. It is advised to provide a well commented and addressed documentation regarding under which circumstances this function will be used (e.g. as an access control, function logic branching, etc.) and evaluate if the chance to circumvent this check with the ways mentioned before imply an issue for the protocol.",
+    "path": ""
+  },
 
 
   {
@@ -300,8 +314,22 @@
   },
   {
     "type": "low",
+    "label": "approve-to-zero-first",
+    "title": "Must approve for zero-allowance first",
+    "prompt": "Some tokens approval handling (like USDT) revert when changing the allowance from an existing non-zero value. They must be first approved to zero and then the actual allowance must be set.",
+    "path": ""
+  },
+  {
+    "type": "low",
+    "label": "lack-of-emitted-events",
+    "title": "Important state changes should emit events",
+    "prompt": "In favor of bringing transparency and increasing the trust on the protocol, it is advised to emit events while performing important state changes such as parameter changes, token flows, actions performed by the roles with higher clearance, among others. Notifying the community and offchain filtering services by emitting indexed events is recommended while performing the following actions: ",
+    "path": ""
+  },
+  {
+    "type": "low",
     "label": "avoid-abiencodepacked",
-    "title": "Using abi.encodePacked before hashing for dynamic values can lead to hash collisions",
+    "title": "Using <code>abi.encodePacked</code> before hashing for dynamic values can lead to hash collisions",
     "prompt": "The mentioned function concatenates directly types that are shorter than 32 bytes without padding or sign extending the value. For further information, the following link of the [official doc](https://docs.soliditylang.org/en/v0.8.13/abi-spec.html#non-standard-packed-mode) can be checked. Essentially, it is recommended using <code>abi.encode()</code> instead of <code>encodePacked()</code> because the first one pads the values across <code>32 bytes</code>.  According to the cited link: >If you use <code>keccak256(abi.encodePacked(a, b))</code> and both a and b are dynamic types, it is easy to craft collisions in the hash value by moving parts of a into b and vice-versa. More specifically, <code>abi.encodePacked(\"a\", \"bc\") == abi.encodePacked(\"ab\", \"c\")</code>. If you use abi.encodePacked for signatures, authentication or data integrity, make sure to always use the same types and check that at most one of them is dynamic. Unless there is a compelling reason, abi.encode should be preferred.",
     "path": ""
   }
