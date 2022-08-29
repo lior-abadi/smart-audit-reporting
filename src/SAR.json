@@ -135,13 +135,7 @@
     "prompt": "Some events within the codebase lack from key indexed parameters. The usage of indexed parameters makes off-chain filtering possible. It is advised adding at least one relevant indexed parameter per emitted event.",
     "path": ""
   },
-  {
-    "type": "n",
-    "label": "centralized-logic",
-    "title": "The allowed role has too much power over some actions",
-    "prompt": "There are some functions that have considerable impact within the community that compromise de decentralization of the protocol and deposit too much trust on the approved caller of that function. In order to build trustless protocols, there should not be a role holding too much power or whose decisions have breaking impact on the community.",
-    "path": ""
-  },
+
   {
     "type": "n",
     "label": "inconsistent-error-handling",
@@ -303,6 +297,13 @@
     "label": "open-todo",
     "title": "Open TODOs across the codebase",
     "prompt": "Having open TODO comments across the codebase not only decrease its quality but also may show non implemented features which could provide a leak of possible attack vectors. It is advised to resolve every single TODO before deploying. For the record, any implementation or feature that may result from resolving an open TODO will be out of the scope of this audit and the plausible impacts that may derive from their implementations may require further audits to be determined.",
+    "path": ""
+  },
+  {
+    "type": "low",
+    "label": "centralized-logic",
+    "title": "The allowed role has too much power over some actions",
+    "prompt": "There are some functions that have considerable impact within the community that compromise de decentralization of the protocol and deposit too much trust on the approved caller of that function. In order to build trustless protocols, there should not be a role holding too much power or whose decisions have breaking impact on the community.",
     "path": ""
   },
   {
