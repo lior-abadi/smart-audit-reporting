@@ -84,6 +84,28 @@
     "prompt": "Because constant variables should be declared an initialized as a one-liner, their value could be easily retrieved by reading directly the source code. Removing the <code>public</code> modifier and using <code>private</code> instead, does not create a function getter for the public constant saving around <code>3500 gas</code> on deployment.",
     "path": ""
   },
+  {
+    "type": "gas",
+    "label": "emit-function-parameters",
+    "title": "Emitting function parameters instead of cache values",
+    "prompt": "While emitting events, passing them cache values from contracts instead of passing directly the function input parameters use unnecessary SLOADs. Avoid this by passing to the emitted event input parameters whenever it's possible.",
+    "path": ""
+  },
+  {
+    "type": "gas",
+    "label": "use-self-truthiness",
+    "title": "Boolean variables could be self compared within conditional or require statements",
+    "prompt": "Comparing a boolean variable against true or false (<code>require(myBoolean == true)</code>) could be replaced by (<code>require(myBoolean)</code>), the same applies for conditional statements. Whenever falsy values are meant to be compared the <code>!</code> sign could be used.",
+    "path": ""
+  },
+  {
+    "type": "gas",
+    "label": "use-unequal-instead",
+    "title": "Comparing a <code>uint</code> with <code>!=</code> is cheaper than using <code>></code> ",
+    "prompt": "For unsigned integers, it is cheaper to check that they are non zero values with the unequal operator rather than checking their greatness. While compiling with the optimizer enabled this change saves around <code>6 gas</code>.",
+    "path": ""
+  },
+
 
   {
     "type": "n",
