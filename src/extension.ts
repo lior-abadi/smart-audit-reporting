@@ -462,7 +462,7 @@ export function activate(context: vscode.ExtensionContext) {
               let findingLabel: string = findingText.slice(
                 7,
                 findingText.length
-              );
+              ).trim();
 
               // Evaluate the type of finding against the current SAR database
               let currentFileName: string | undefined = file
