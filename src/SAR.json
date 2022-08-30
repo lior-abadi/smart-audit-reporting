@@ -308,6 +308,13 @@
   },
   {
     "type": "low",
+    "label": "unbounded-for-loop",
+    "title": "Unbounded array length on for loop",
+    "prompt": "Providing unbounded arrays that could come from function inputs or local logic may cause a loop to exceed the max. block gas usage reverting the whole call. Whenever it is possible, it is advised to hard-cap the length of the arrays and check their length before looping in order to prevent wasting unnecessary gas on execution.",
+    "path": ""
+  },
+  {
+    "type": "low",
     "label": "revert-not-properly-bubbled",
     "title": "Reverts are not properly bubbled up if their length is shorter than 68",
     "prompt": "While checking for revert strings strictly equal than zero, any errors which length is shorter than 68 won't be covered by the mentioned strict equality causing the code not to revert via the intended way. More about this issue can be seen on [this discussion](https://ethereum.stackexchange.com/questions/83528/how-can-i-get-the-revert-reason-of-a-call-in-solidity-so-that-i-can-use-it-in-th/83529#83529).",
